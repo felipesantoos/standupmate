@@ -4,7 +4,8 @@
  * Upload and import template from JSON file.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { Button } from '@app/components/ui/button';
 import { X, Upload, FileJson } from 'lucide-react';
@@ -19,7 +20,13 @@ export function ImportTemplateModal({ onClose }: ImportTemplateModalProps) {
   const [jsonContent, setJsonContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
   const { importFromJSON } = useTemplates();
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -64,9 +71,20 @@ export function ImportTemplateModal({ onClose }: ImportTemplateModalProps) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  if (!mounted) return null;
+
+  const modalContent = (
+    <div 
+      className="fixed top-0 left-0 right-0 bottom-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      onClick={handleBackdropClick}
+    >
+      <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Import Template</CardTitle>
@@ -141,5 +159,7 @@ export function ImportTemplateModal({ onClose }: ImportTemplateModalProps) {
       </Card>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 

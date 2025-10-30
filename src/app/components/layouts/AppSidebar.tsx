@@ -9,6 +9,9 @@ import {
   FileText,
   BarChart3,
   Settings,
+  Moon,
+  Sun,
+  Monitor,
 } from 'lucide-react';
 
 import { NavMain } from './NavMain';
@@ -23,7 +26,6 @@ import {
   SidebarRail,
 } from '../ui/sidebar';
 import { useTheme } from '@app/store/ThemeContext';
-import { Moon, Sun, Monitor } from 'lucide-react';
 
 // Navigation data
 const mainNavItems = [
@@ -52,8 +54,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Ticket className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent">
+                <img 
+                  src="/logo.svg" 
+                  alt="StandupMate Logo" 
+                  className="size-6 dark:brightness-0 dark:invert" 
+                />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">StandupMate</span>
