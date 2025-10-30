@@ -75,6 +75,9 @@ export function TypeDistributionChart({ data, loading }: TypeDistributionChartPr
               ))}
             </Pie>
             <Tooltip 
+              formatter={(value: number, name: string, entry: any) => {
+                return [`${value} tickets (${entry.payload.percentage}%)`, entry.payload.type];
+              }}
               contentStyle={{ 
                 backgroundColor: 'hsl(var(--card))', 
                 border: '1px solid hsl(var(--border))',

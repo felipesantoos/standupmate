@@ -72,8 +72,18 @@ export class AnalyticsService {
     const counts: Record<string, number> = {};
     
     tickets.forEach((ticket) => {
-      const type = ticket.data['type'] || 'Other';
-      counts[type] = (counts[type] || 0) + 1;
+      // Check if type exists in ticket data
+      let type = ticket.data['type'];
+      
+      // Handle FieldOption format (objects with value/label)
+      if (type && typeof type === 'object' && 'value' in type) {
+        type = type.value;
+      }
+      
+      // Default to 'Other' if no type
+      const typeStr = type || 'Other';
+      
+      counts[typeStr] = (counts[typeStr] || 0) + 1;
     });
 
     const total = tickets.length || 1;
