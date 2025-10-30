@@ -83,70 +83,77 @@ export function MarkdownEditor({
   const showCharCount = minLength || maxLength;
 
   return (
-    <div className={cn('border rounded-md overflow-hidden', className)}>
+    <div className={cn(
+      'flex flex-col rounded-lg border bg-background shadow-sm',
+      className
+    )}>
       {/* Toolbar with View Mode Buttons */}
-      <div className="bg-muted/50 px-4 py-2 border-b border-border flex items-center justify-between">
+      <div className="flex items-center justify-between border-b px-3 py-2">
         <div className="text-sm font-medium text-muted-foreground">
           Markdown Editor
         </div>
         <div className="flex items-center gap-1">
           <Button
             type="button"
-            variant={viewMode === 'raw' ? 'secondary' : 'ghost'}
+            variant={viewMode === 'raw' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('raw')}
             title="Mostrar apenas Markdown"
-            className="h-8"
+            className="h-8 px-2"
           >
-            <Code className="h-4 w-4 mr-1" />
-            Raw
+            <Code className="h-4 w-4" />
+            <span className="hidden sm:inline">Raw</span>
           </Button>
           <Button
             type="button"
-            variant={viewMode === 'split' ? 'secondary' : 'ghost'}
+            variant={viewMode === 'split' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('split')}
             title="Mostrar ambos lado a lado"
-            className="h-8"
+            className="h-8 px-2"
           >
-            <Columns className="h-4 w-4 mr-1" />
-            Split
+            <Columns className="h-4 w-4" />
+            <span className="hidden sm:inline">Split</span>
           </Button>
           <Button
             type="button"
-            variant={viewMode === 'preview' ? 'secondary' : 'ghost'}
+            variant={viewMode === 'preview' ? 'default' : 'ghost'}
             size="sm"
             onClick={() => setViewMode('preview')}
             title="Mostrar apenas Preview"
-            className="h-8"
+            className="h-8 px-2"
           >
-            <Eye className="h-4 w-4 mr-1" />
-            Preview
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Preview</span>
           </Button>
         </div>
       </div>
 
       {/* Two Panel Layout */}
       <div className={cn(
-        'grid min-h-[300px]',
+        'grid flex-1 overflow-hidden',
         viewMode === 'split' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'
       )}>
         {/* Left Panel - Raw Markdown Editor */}
         {(viewMode === 'raw' || viewMode === 'split') && (
-          <div className={cn(viewMode === 'split' && 'border-r border-border')}>
-            <div className="bg-muted/50 px-4 py-2 border-b border-border">
-              <span className="text-sm font-medium">Markdown</span>
+          <div className={cn(
+            'flex flex-col',
+            viewMode === 'split' && 'border-r'
+          )}>
+            <div className="border-b bg-muted/40 px-3 py-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Markdown</span>
             </div>
             <textarea
               value={markdown}
               onChange={(e) => handleChange(e.target.value)}
               placeholder={placeholder}
               className={cn(
-                'w-full h-full min-h-[250px] p-4 resize-none',
-                'bg-background text-foreground',
-                'focus:outline-none',
-                'font-mono text-sm',
-                'placeholder:text-muted-foreground'
+                'flex-1 min-h-[300px] resize-none',
+                'bg-transparent px-4 py-3',
+                'text-sm font-mono leading-relaxed',
+                'text-foreground placeholder:text-muted-foreground',
+                'focus-visible:outline-none',
+                'disabled:cursor-not-allowed disabled:opacity-50'
               )}
             />
           </div>
@@ -154,11 +161,11 @@ export function MarkdownEditor({
 
         {/* Right Panel - HTML Preview */}
         {(viewMode === 'preview' || viewMode === 'split') && (
-          <div>
-            <div className="bg-muted/50 px-4 py-2 border-b border-border">
-              <span className="text-sm font-medium">Preview</span>
+          <div className="flex flex-col">
+            <div className="border-b bg-muted/40 px-3 py-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Preview</span>
             </div>
-            <div className="overflow-auto h-full min-h-[250px] bg-muted/10">
+            <div className="flex-1 min-h-[300px] overflow-auto">
               {renderPreview()}
             </div>
           </div>
@@ -167,22 +174,40 @@ export function MarkdownEditor({
 
       {/* Character Count Footer */}
       {showCharCount && (
-        <div className="px-4 py-2 text-xs text-muted-foreground border-t bg-muted/30 flex items-center justify-between">
-          <div>
-            {characterCount} caracteres
-            {minLength && ` (mín: ${minLength})`}
-            {maxLength && ` (máx: ${maxLength})`}
+        <div className="flex items-center justify-between gap-2 border-t bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span>
+              {characterCount} caractere{characterCount !== 1 ? 's' : ''}
+            </span>
+            {minLength && (
+              <span className="text-muted-foreground/70">
+                mín: {minLength}
+              </span>
+            )}
+            {maxLength && (
+              <span className="text-muted-foreground/70">
+                máx: {maxLength}
+              </span>
+            )}
           </div>
           
           {/* Quick Reference */}
-          <div className="text-xs text-muted-foreground">
-            <span className="font-mono">**negrito**</span>
-            <span className="mx-2">•</span>
-            <span className="font-mono">*itálico*</span>
-            <span className="mx-2">•</span>
-            <span className="font-mono"># Título</span>
-            <span className="mx-2">•</span>
-            <span className="font-mono">- Lista</span>
+          <div className="hidden items-center gap-2 lg:flex">
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[10px]">
+              **negrito**
+            </code>
+            <span className="text-muted-foreground/50">•</span>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[10px]">
+              *itálico*
+            </code>
+            <span className="text-muted-foreground/50">•</span>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[10px]">
+              # Título
+            </code>
+            <span className="text-muted-foreground/50">•</span>
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[10px]">
+              - Lista
+            </code>
           </div>
         </div>
       )}
