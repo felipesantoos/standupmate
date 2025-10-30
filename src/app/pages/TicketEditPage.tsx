@@ -17,9 +17,9 @@ import { TagManager } from '@app/components/ticket/TagManager';
 import { Button } from '@app/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { Spinner } from '@app/components/ui/spinner';
-import { Badge } from '@app/components/ui/badge';
 import { Separator } from '@app/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/components/ui/select';
 
 function PageSpinner() {
   return (
@@ -28,7 +28,7 @@ function PageSpinner() {
     </div>
   );
 }
-import { Save, ArrowLeft, Check, Play, FileDown, Undo, Redo, History, PlayCircle, CheckCircle, Download } from 'lucide-react';
+import { Save, ArrowLeft, Undo, Redo, History, PlayCircle, CheckCircle, Download, FileEdit, Archive } from 'lucide-react';
 import { TicketHistoryTimeline } from '@app/components/ticket/TicketHistoryTimeline';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
@@ -138,11 +138,14 @@ export function TicketEditPage() {
   };
 
   // Auto-save (only for existing tickets)
-  const { isSaving, lastSaved } = useAutoSave({
+  useAutoSave({
     data: ticket,
     onSave: async (t) => {
       if (!isNew && t) {
         await updateTicket(t.id, t);
+        toast.success('Changes saved automatically', {
+          duration: 2000,
+        });
       }
     },
     delay: 2000,
@@ -152,11 +155,19 @@ export function TicketEditPage() {
   // Sync undo/redo state with ticket when undo/redo is used
   useEffect(() => {
     if (ticket && Object.keys(ticketData).length > 0 && JSON.stringify(ticket.data) !== JSON.stringify(ticketData)) {
-      setTicket({
-        ...ticket,
-        data: ticketData,
-        updatedAt: new Date(),
-      });
+      const updatedTicket = new Ticket(
+        ticket.id,
+        ticket.templateId,
+        ticket.templateVersion,
+        ticket.status,
+        ticketData,
+        ticket.metadata,
+        ticket.tags,
+        ticket.createdAt,
+        new Date(),
+        ticket.completedAt
+      );
+      setTicket(updatedTicket);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketData]);
@@ -225,6 +236,49 @@ export function TicketEditPage() {
     setTicket(updatedTicket);
   };
 
+  // Update status
+  const handleStatusChange = async (newStatus: string) => {
+    if (!ticket) return;
+
+    const oldStatus = ticket.status;
+    const status = newStatus as TicketStatus;
+
+    const updatedTicket = new Ticket(
+      ticket.id,
+      ticket.templateId,
+      ticket.templateVersion,
+      status,
+      ticket.data,
+      ticket.metadata,
+      ticket.tags,
+      ticket.createdAt,
+      new Date(),
+      status === TicketStatus.COMPLETED ? new Date() : ticket.completedAt
+    );
+
+    setTicket(updatedTicket);
+
+    if (!isNew) {
+      await updateTicket(ticket.id, updatedTicket);
+
+      // Add to history
+      const change: TicketChange = {
+        id: uuidv4(),
+        ticketId: ticket.id,
+        changeType: ChangeType.STATUS_CHANGED,
+        oldValue: oldStatus,
+        newValue: status,
+        timestamp: new Date(),
+        description: `Status changed from "${oldStatus}" to "${status}"`,
+      };
+      const newHistory = [...ticketHistory, change];
+      setTicketHistory(newHistory);
+      localStorage.setItem(`ticket-history-${ticket.id}`, JSON.stringify(newHistory));
+      
+      toast.success(`Status updated to ${status}`);
+    }
+  };
+
   // Validate ticket
   const validate = (): boolean => {
     if (!ticket || !template) return false;
@@ -272,76 +326,6 @@ export function TicketEditPage() {
       }
     } catch (error) {
       toast.error((error as Error).message);
-    }
-  };
-
-  // Mark as in progress
-  const handleMarkInProgress = async () => {
-    if (!ticket) return;
-
-    const updatedTicket = new Ticket(
-      ticket.id,
-      ticket.templateId,
-      ticket.templateVersion,
-      TicketStatus.IN_PROGRESS,
-      ticket.data,
-      ticket.metadata,
-      ticket.tags,
-      ticket.createdAt,
-      new Date(),
-      ticket.completedAt
-    );
-
-    setTicket(updatedTicket);
-    
-    if (!isNew) {
-      await updateTicket(ticket.id, updatedTicket);
-      
-      // Add to history
-      const change: TicketChange = {
-        id: uuidv4(),
-        ticketId: ticket.id,
-        changeType: ChangeType.STATUS_CHANGED,
-        oldValue: ticket.status,
-        newValue: TicketStatus.IN_PROGRESS,
-        timestamp: new Date(),
-        description: 'Status changed to "In Progress"',
-      };
-      const newHistory = [...ticketHistory, change];
-      setTicketHistory(newHistory);
-      localStorage.setItem(`ticket-history-${ticket.id}`, JSON.stringify(newHistory));
-    }
-  };
-
-  // Mark as completed
-  const handleMarkCompleted = async () => {
-    if (!ticket || !validate()) return;
-
-    try {
-      ticket.markAsCompleted();
-      setTicket({ ...ticket });
-      
-      if (!isNew) {
-        await updateTicket(ticket.id, ticket);
-        
-        // Add to history
-        const change: TicketChange = {
-          id: uuidv4(),
-          ticketId: ticket.id,
-          changeType: ChangeType.COMPLETED,
-          oldValue: ticket.status,
-          newValue: TicketStatus.COMPLETED,
-          timestamp: new Date(),
-          description: 'Ticket marked as complete',
-        };
-        const newHistory = [...ticketHistory, change];
-        setTicketHistory(newHistory);
-        localStorage.setItem(`ticket-history-${ticket.id}`, JSON.stringify(newHistory));
-        
-        toast.success('Ticket marked as complete.');
-      }
-    } catch (error) {
-      toast.error('Erro', (error as Error).message);
     }
   };
 
@@ -402,58 +386,99 @@ export function TicketEditPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => navigate('/tickets')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/tickets')}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               {isNew ? 'New Ticket' : 'Edit Ticket'}
             </h1>
-            {!isNew && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {isSaving ? 'Saving...' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : ''}
-              </p>
-            )}
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {/* Undo/Redo */}
-          <Button variant="outline" size="sm" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)">
-            <Undo className="w-4 h-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)">
-            <Redo className="w-4 h-4" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={undo} disabled={!canUndo}>
+                  <Undo className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={redo} disabled={!canRedo}>
+                  <Redo className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Redo (Ctrl+Y)</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <Separator orientation="vertical" className="h-8" />
 
           {!isNew && (
             <>
-              <Button variant="outline" onClick={() => setShowHistory(!showHistory)}>
+              {/* Status Dropdown */}
+              <Select value={ticket.status} onValueChange={handleStatusChange}>
+                <SelectTrigger className="h-9 w-[140px] cursor-pointer">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TicketStatus.DRAFT} className="cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <FileEdit className="w-4 h-4" />
+                      <span>Draft</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={TicketStatus.IN_PROGRESS} className="cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <PlayCircle className="w-4 h-4" />
+                      <span>In Progress</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={TicketStatus.COMPLETED} className="cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Completed</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value={TicketStatus.ARCHIVED} className="cursor-pointer">
+                    <div className="flex items-center gap-2">
+                      <Archive className="w-4 h-4" />
+                      <span>Archived</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowHistory(!showHistory)}
+                className="transition-colors"
+              >
                 <History className="w-4 h-4 mr-2" />
                 History
               </Button>
-              <Button variant="outline" onClick={handleExport}>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleExport}
+                className="transition-colors"
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Export MD
               </Button>
             </>
           )}
 
-          {ticket.status === TicketStatus.DRAFT && (
-            <Button variant="outline" onClick={handleMarkInProgress}>
-              <PlayCircle className="w-4 h-4 mr-2" />
-              Start
-            </Button>
-          )}
-          
-          {ticket.status === TicketStatus.IN_PROGRESS && (
-            <Button variant="outline" onClick={handleMarkCompleted}>
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Complete
-            </Button>
-          )}
-
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} size="sm" className="transition-colors">
             <Save className="w-4 h-4 mr-2" />
             Save
           </Button>
@@ -467,18 +492,18 @@ export function TicketEditPage() {
             <CardTitle>Select Template</CardTitle>
           </CardHeader>
           <CardContent>
-            <select
-              value={selectedTemplateId}
-              onChange={(e) => handleTemplateChange(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Select a template...</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name} {t.isDefault ? '(Default)' : ''}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedTemplateId} onValueChange={handleTemplateChange}>
+              <SelectTrigger className="cursor-pointer">
+                <SelectValue placeholder="Select a template..." />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((t) => (
+                  <SelectItem key={t.id} value={t.id} className="cursor-pointer">
+                    {t.name} {t.isDefault ? '(Default)' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {template && (
               <p className="text-sm text-muted-foreground mt-2">
                 {template.description || 'No description'}
@@ -520,13 +545,6 @@ export function TicketEditPage() {
           />
         </CardContent>
       </Card>
-
-      {/* Status Badge */}
-      <div className="mt-6 p-4 bg-muted rounded-lg">
-        <p className="text-sm text-muted-foreground">
-          <strong>Status:</strong> {ticket.status}
-        </p>
-      </div>
 
       {/* History Timeline */}
       {showHistory && !isNew && (

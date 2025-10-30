@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@app/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@app/components/ui/radio-group';
 import { Label } from '@app/components/ui/label';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface DynamicFieldProps {
   field: Field;
@@ -23,9 +23,26 @@ interface DynamicFieldProps {
 export function DynamicField({ field, value, onChange, error }: DynamicFieldProps) {
   const [localValue, setLocalValue] = useState(value);
 
+  // Sync local value with prop value
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
   const handleChange = (newValue: any) => {
     setLocalValue(newValue);
     onChange(newValue);
+  };
+
+  // Helper to normalize options (support both string[] and FieldOption[])
+  const normalizeOptions = () => {
+    if (!field.options) return [];
+    
+    return field.options.map((option) => {
+      if (typeof option === 'string') {
+        return { value: option, label: option };
+      }
+      return option;
+    });
   };
 
   const renderField = () => {
@@ -45,7 +62,7 @@ export function DynamicField({ field, value, onChange, error }: DynamicFieldProp
 
       case FieldType.TEXTAREA:
         return (
-          <textarea
+          <Textarea
             value={localValue || ''}
             onChange={(e) => handleChange(e.target.value)}
             placeholder={field.placeholder}
@@ -53,7 +70,6 @@ export function DynamicField({ field, value, onChange, error }: DynamicFieldProp
             minLength={field.validation?.minLength}
             maxLength={field.validation?.maxLength}
             rows={5}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
         );
 
@@ -83,61 +99,58 @@ export function DynamicField({ field, value, onChange, error }: DynamicFieldProp
       case FieldType.CHECKBOX:
         return (
           <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
+            <Checkbox
+              id={field.id}
               checked={!!localValue}
-              onChange={(e) => handleChange(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+              onCheckedChange={(checked) => handleChange(checked)}
             />
-            <span className="text-sm text-muted-foreground">{field.placeholder || field.label}</span>
+            <Label htmlFor={field.id} className="text-sm font-normal cursor-pointer">
+              {field.placeholder || field.label}
+            </Label>
           </div>
         );
 
       case FieldType.RADIO:
+        const radioOptions = normalizeOptions();
         return (
-          <div className="space-y-2">
-            {field.options?.map((option) => (
-              <label key={option} className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name={field.id}
-                  value={option}
-                  checked={localValue === option}
-                  onChange={(e) => handleChange(e.target.value)}
-                  className="h-4 w-4 border-gray-300 text-primary focus:ring-2 focus:ring-primary"
-                />
-                <span className="text-sm">{option}</span>
-              </label>
+          <RadioGroup value={localValue || ''} onValueChange={handleChange}>
+            {radioOptions.map((option) => (
+              <div key={option.value} className="flex items-center space-x-2">
+                <RadioGroupItem value={option.value} id={`${field.id}-${option.value}`} />
+                <Label htmlFor={`${field.id}-${option.value}`} className="font-normal cursor-pointer">
+                  {option.label}
+                </Label>
+              </div>
             ))}
-          </div>
+          </RadioGroup>
         );
 
       case FieldType.SELECT:
+        const selectOptions = normalizeOptions();
         return (
-          <select
-            value={localValue || ''}
-            onChange={(e) => handleChange(e.target.value)}
-            required={field.required}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">Select...</option>
-            {field.options?.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          <Select value={localValue || ''} onValueChange={handleChange}>
+            <SelectTrigger className="cursor-pointer">
+              <SelectValue placeholder="Select..." />
+            </SelectTrigger>
+            <SelectContent>
+              {selectOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value} className="cursor-pointer">
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         );
 
       case FieldType.MARKDOWN:
         return (
-          <textarea
+          <Textarea
             value={localValue || ''}
             onChange={(e) => handleChange(e.target.value)}
             placeholder={field.placeholder || 'Markdown suportado...'}
             required={field.required}
             rows={8}
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="font-mono"
           />
         );
 

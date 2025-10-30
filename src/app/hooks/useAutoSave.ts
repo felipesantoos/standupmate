@@ -36,8 +36,9 @@ export function useAutoSave<T>({
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [error, setError] = useState<Error | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const previousDataRef = useRef<T>(data);
+  const isFirstRender = useRef(true);
 
   /**
    * Save immediately
@@ -67,6 +68,13 @@ export function useAutoSave<T>({
   useEffect(() => {
     if (!enabled) return;
 
+    // Skip first render to avoid saving on mount
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      previousDataRef.current = data;
+      return;
+    }
+
     // Check if data changed
     if (JSON.stringify(data) === JSON.stringify(previousDataRef.current)) {
       return;
@@ -88,6 +96,7 @@ export function useAutoSave<T>({
         clearTimeout(timeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, enabled, delay]);
 
   return {

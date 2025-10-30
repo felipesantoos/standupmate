@@ -52,7 +52,7 @@ export interface Field {
   placeholder?: string;
   order: number;
   validation?: FieldValidation;
-  options?: FieldOption[];
+  options?: FieldOption[] | string[];  // Support both formats
   defaultValue?: any;
 }
 

@@ -7,7 +7,6 @@
 import { Field, FieldType } from '@core/domain/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { Input } from '@app/components/ui/input';
-import { Textarea } from '@app/components/ui/textarea';
 import { Button } from '@app/components/ui/button';
 import { X } from 'lucide-react';
 import { useState } from 'react';
@@ -34,20 +33,20 @@ export function FieldPropertyEditor({ field, onUpdate, onClose }: FieldPropertyE
   };
 
   const addOption = () => {
-    const options = [...(localField.options || []), ''];
+    const options = [...(localField.options || []), ''] as string[];
     setLocalField({ ...localField, options });
     onUpdate({ options });
   };
 
   const updateOption = (index: number, value: string) => {
-    const options = [...(localField.options || [])];
+    const options = [...(localField.options || [])] as string[];
     options[index] = value;
     setLocalField({ ...localField, options });
     onUpdate({ options });
   };
 
   const removeOption = (index: number) => {
-    const options = [...(localField.options || [])];
+    const options = [...(localField.options || [])] as string[];
     options.splice(index, 1);
     setLocalField({ ...localField, options });
     onUpdate({ options });
@@ -123,18 +122,21 @@ export function FieldPropertyEditor({ field, onUpdate, onClose }: FieldPropertyE
           <div>
             <label className="block text-sm font-medium mb-2">Options</label>
             <div className="space-y-2">
-              {(localField.options || []).map((option, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={option}
-                    onChange={(e) => updateOption(index, e.target.value)}
-                    placeholder={`Option ${index + 1}`}
-                  />
-                  <Button size="sm" variant="ghost" onClick={() => removeOption(index)}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
+              {(localField.options || []).map((option, index) => {
+                const optionValue = typeof option === 'string' ? option : option.label;
+                return (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={optionValue}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      placeholder={`Option ${index + 1}`}
+                    />
+                    <Button size="sm" variant="ghost" onClick={() => removeOption(index)}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                );
+              })}
               <Button size="sm" variant="outline" onClick={addOption} className="w-full">
                 + Add Option
               </Button>
