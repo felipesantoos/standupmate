@@ -10,7 +10,7 @@ import { TicketProvider } from './store/TicketContext';
 import { TemplateProvider } from './store/TemplateContext';
 import { ThemeProvider } from './store/ThemeContext';
 import { MainLayout } from './components/layouts/MainLayout';
-// Temporarily commenting out CommandPalette until it's recreated with shadcn
+// CommandPalette temporarily disabled - will be recreated with shadcn Command
 // import { CommandPalette } from './components/command/CommandPalette';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { DashboardPage } from './pages/DashboardPage';
