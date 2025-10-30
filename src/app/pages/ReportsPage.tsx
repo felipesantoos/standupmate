@@ -4,7 +4,7 @@
  * Weekly and monthly reports with analytics.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTickets } from '@app/hooks/useTickets';
 import { useAnalytics } from '@app/hooks/useAnalytics';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
@@ -13,6 +13,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/car
 import { Button } from '@app/components/ui/button';
 import { ProductivityChart } from '@app/components/dashboard/ProductivityChart';
 import { TypeDistributionChart } from '@app/components/dashboard/TypeDistributionChart';
+import { StatusDistributionChart } from '@app/components/dashboard/StatusDistributionChart';
 import { Download, Calendar } from 'lucide-react';
 
 type ReportPeriod = 'week' | 'month' | 'custom';
@@ -45,10 +46,15 @@ export function ReportsPage() {
   };
 
   const { start, end } = getDateRange();
-  const filter = new TicketFilter(undefined, undefined, undefined, start, end);
+  
+  // Memoize filter to prevent infinite rerenders - recreate only when period or dates change
+  const filter = useMemo(
+    () => new TicketFilter(undefined, undefined, undefined, start, end),
+    [period, start?.getTime(), end?.getTime(), customStart?.getTime(), customEnd?.getTime()]
+  );
   
   const { tickets, loading, totalCount } = useTickets(filter, true);
-  const { productivityData, typeDistribution, timeComparison } = useAnalytics(tickets);
+  const { productivityData, typeDistribution, timeComparison, statusDistribution } = useAnalytics(tickets);
 
   const completedCount = tickets.filter((t) => t.status === TicketStatus.COMPLETED).length;
   const inProgressCount = tickets.filter((t) => t.status === TicketStatus.IN_PROGRESS).length;
@@ -210,9 +216,10 @@ ${timeComparison
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <ProductivityChart data={productivityData} />
         <TypeDistributionChart data={typeDistribution} />
+        <StatusDistributionChart data={statusDistribution} loading={loading} />
       </div>
 
       {/* Time Comparison Table */}

@@ -10,7 +10,8 @@ import { Skeleton } from '@app/components/ui/skeleton';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@app/components/ui/empty';
 import { Checkbox } from '@app/components/ui/checkbox';
 import { Label } from '@app/components/ui/label';
-import { FileText } from 'lucide-react';
+import { Button } from '@app/components/ui/button';
+import { FileText, Plus } from 'lucide-react';
 
 export function SkeletonList() {
   return (
@@ -44,12 +45,10 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
         {action && (
-          <button
-            onClick={action.onClick}
-            className="mt-4 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
+          <Button onClick={action.onClick} className="mt-4">
+            <Plus className="mr-2 h-4 w-4" />
             {action.label}
-          </button>
+          </Button>
         )}
       </EmptyContent>
     </Empty>
@@ -116,12 +115,18 @@ export function TicketList({
     <div className="space-y-4">
       {/* Select All */}
       {onSelectionChange && tickets.length > 0 && (
-        <div className="flex items-center gap-2 px-2">
+        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
           <Checkbox
+            id="select-all"
             checked={selectedTickets.length === tickets.length && tickets.length > 0}
             onCheckedChange={toggleSelectAll}
+            aria-label="Select all tickets"
+            className="shrink-0"
           />
-          <Label className="text-sm text-muted-foreground cursor-pointer">
+          <Label 
+            htmlFor="select-all" 
+            className="text-sm font-medium cursor-pointer"
+          >
             Select all ({tickets.length})
           </Label>
         </div>
@@ -130,13 +135,15 @@ export function TicketList({
       {/* Tickets */}
       <div className="grid gap-4">
         {tickets.map((ticket) => (
-          <div key={ticket.id} className="flex items-start gap-3">
+          <div key={ticket.id} className="flex items-center gap-3 group/checkbox">
             {onSelectionChange && (
               <Checkbox
+                id={`ticket-${ticket.id}`}
                 checked={selectedTickets.includes(ticket.id)}
                 onCheckedChange={() => toggleSelection(ticket.id)}
-                className="mt-4"
                 onClick={(e: any) => e.stopPropagation()}
+                aria-label={`Select ticket ${ticket.data['title'] || 'Untitled'}`}
+                className="shrink-0 opacity-60 group-hover/checkbox:opacity-100 transition-opacity"
               />
             )}
             <div className="flex-1">

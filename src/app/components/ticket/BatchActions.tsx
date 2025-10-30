@@ -6,7 +6,10 @@
 
 import { Button } from '@app/components/ui/button';
 import { Badge } from '@app/components/ui/badge';
-import { Download, Trash2, Archive, CheckCircle } from 'lucide-react';
+import { Card } from '@app/components/ui/card';
+import { Separator } from '@app/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/components/ui/tooltip';
+import { Download, Trash2, Archive, CheckCircle, X } from 'lucide-react';
 
 interface BatchActionsProps {
   selectedCount: number;
@@ -28,42 +31,71 @@ export function BatchActions({
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-      <div className="bg-card border border-border rounded-lg shadow-lg p-4 flex items-center gap-3">
-        <span className="text-sm font-medium">
-          {selectedCount} ticket{selectedCount > 1 ? 's' : ''} selected
-        </span>
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5">
+      <TooltipProvider>
+        <Card className="shadow-xl border-2">
+          <div className="p-3 flex items-center gap-3">
+            <Badge variant="secondary" className="font-normal">
+              {selectedCount} selected
+            </Badge>
 
-        <div className="h-6 w-px bg-border" />
+            <Separator orientation="vertical" className="h-6" />
 
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={onExport}>
-            <Download className="w-4 h-4 mr-1" />
-            Export
-          </Button>
+            <div className="flex gap-1">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={onExport}>
+                    <Download className="w-4 h-4" />
+                    Export
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Export selected tickets</TooltipContent>
+              </Tooltip>
 
-          <Button size="sm" variant="outline" onClick={onMarkComplete}>
-            <CheckCircle className="w-4 h-4 mr-1" />
-            Complete
-          </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={onMarkComplete}>
+                    <CheckCircle className="w-4 h-4" />
+                    Complete
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Mark as completed</TooltipContent>
+              </Tooltip>
 
-          <Button size="sm" variant="outline" onClick={onArchive}>
-            <Archive className="w-4 h-4 mr-1" />
-            Archive
-          </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={onArchive}>
+                    <Archive className="w-4 h-4" />
+                    Archive
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Archive selected</TooltipContent>
+              </Tooltip>
 
-          <Button size="sm" variant="outline" onClick={onDelete} className="text-destructive">
-            <Trash2 className="w-4 h-4 mr-1" />
-            Delete
-          </Button>
-        </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="destructive" onClick={onDelete}>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete permanently</TooltipContent>
+              </Tooltip>
+            </div>
 
-        <div className="h-6 w-px bg-border" />
+            <Separator orientation="vertical" className="h-6" />
 
-        <Button size="sm" variant="ghost" onClick={onClearSelection}>
-          Clear
-        </Button>
-      </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="sm" variant="ghost" onClick={onClearSelection}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Clear selection</TooltipContent>
+            </Tooltip>
+          </div>
+        </Card>
+      </TooltipProvider>
     </div>
   );
 }

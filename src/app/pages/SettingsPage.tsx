@@ -40,7 +40,7 @@ export function SettingsPage() {
         <p className="text-muted-foreground mt-2">Customize your experience</p>
       </div>
 
-      <div className="space-y-6 max-w-3xl">
+      <div className="space-y-6 w-full max-w-full">
         {/* Tag Colors */}
         <TagColorPicker />
 

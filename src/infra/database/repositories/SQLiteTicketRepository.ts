@@ -191,8 +191,8 @@ export class SQLiteTicketRepository implements ITicketRepository {
       // Same filters as findAll, but NO pagination/sorting
 
       if (filter.hasSearch()) {
-        sql += ' AND id IN (SELECT id FROM tickets_fts WHERE tickets_fts MATCH ?)';
-        params.push(filter.search);
+        sql += ' AND data_json LIKE ?';
+        params.push(`%${filter.search}%`);
       }
 
       if (filter.hasStatusFilter()) {

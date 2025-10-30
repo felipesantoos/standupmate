@@ -31,11 +31,17 @@ export function useAnalytics(tickets: Ticket[]) {
     [analytics, tickets]
   );
 
+  const statusDistribution = useMemo(
+    () => analytics.getStatusDistribution(tickets),
+    [analytics, tickets]
+  );
+
   return {
     productivityData,
     typeDistribution,
     timeComparison,
     averageTimeByStatus,
+    statusDistribution,
   };
 }
 

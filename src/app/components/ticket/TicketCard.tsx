@@ -1,16 +1,16 @@
 /**
  * Ticket Card Component
  * 
- * Displays ticket in card format.
+ * Displays ticket in card format with modern compact design.
  */
 
 import { Ticket } from '@core/domain/Ticket';
 import { TicketStatus } from '@core/domain/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
 import { Badge } from '@app/components/ui/badge';
 import { formatRelativeTime } from '@/utils/formatters';
-import { Clock, Calendar, CheckCircle, Circle, Archive } from 'lucide-react';
+import { Clock, Calendar, User, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getTagColor } from './TagColorPicker';
 
 interface TicketCardProps {
   ticket: Ticket;
@@ -20,73 +20,120 @@ interface TicketCardProps {
 export function TicketCard({ ticket, onClick }: TicketCardProps) {
   const title = ticket.data['title'] || 'Untitled Ticket';
   const description = ticket.data['description'] || '';
+  const hasPriority = ticket.metadata.priority;
 
-  // Status badge variant
-  const getStatusBadge = (status: TicketStatus) => {
+  // Status badge variant (black & white + semantic green)
+  const getStatusVariant = (status: TicketStatus): 'default' | 'secondary' | 'outline' => {
+    if (status === TicketStatus.COMPLETED) return 'default';
+    if (status === TicketStatus.IN_PROGRESS) return 'secondary';
+    return 'outline';
+  };
+
+  // Status text
+  const getStatusText = (status: TicketStatus) => {
     switch (status) {
       case TicketStatus.DRAFT:
-        return { variant: 'secondary' as const, icon: Circle, label: 'Draft' };
+        return 'Draft';
       case TicketStatus.IN_PROGRESS:
-        return { variant: 'default' as const, icon: Clock, label: 'In Progress' };
+        return 'In Progress';
       case TicketStatus.COMPLETED:
-        return { variant: 'outline' as const, icon: CheckCircle, label: 'Complete' };
+        return 'Completed';
       case TicketStatus.ARCHIVED:
-        return { variant: 'secondary' as const, icon: Archive, label: 'Archived' };
+        return 'Archived';
     }
   };
 
-  const statusBadge = getStatusBadge(ticket.status);
-  const StatusIcon = statusBadge.icon;
+  const statusVariant = getStatusVariant(ticket.status);
+  const statusText = getStatusText(ticket.status);
 
   return (
     <Link to={`/tickets/${ticket.id}`} onClick={onClick}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer">
-        <CardHeader>
-          <div className="flex items-start justify-between gap-4">
+      <div className="group relative bg-card border border-border rounded-xl shadow-sm hover:shadow-md hover:border-foreground/10 transition-all cursor-pointer">
+        <div className="p-4 space-y-3">
+          {/* Header Row */}
+          <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-lg">{title}</CardTitle>
-              <CardDescription className="mt-1 line-clamp-2">
-                {description}
-              </CardDescription>
+              <h3 className="text-sm font-semibold text-foreground line-clamp-1">
+                {title}
+              </h3>
+              {description && (
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  {description}
+                </p>
+              )}
             </div>
-            <Badge variant={statusBadge.variant} className="flex items-center gap-1 shrink-0">
-              <StatusIcon className="w-3 h-3" />
-              <span>{statusBadge.label}</span>
+            
+            {/* Status Badge */}
+            <Badge 
+              variant={statusVariant}
+              className={`shrink-0 ${
+                ticket.status === TicketStatus.COMPLETED 
+                  ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50' 
+                  : ''
+              }`}
+            >
+              {statusText}
             </Badge>
           </div>
-        </CardHeader>
 
-        <CardContent>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Calendar className="w-4 h-4" />
+          {/* Tags & Priority Row */}
+          {(ticket.tags.length > 0 || hasPriority) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {hasPriority && (
+                <Badge 
+                  variant="outline" 
+                  className="text-xs"
+                  style={{ 
+                    borderColor: hasPriority === 'high' ? '#EF4444' : hasPriority === 'medium' ? '#F59E0B' : 'hsl(var(--border))',
+                    color: hasPriority === 'high' ? '#EF4444' : hasPriority === 'medium' ? '#F59E0B' : 'hsl(var(--muted-foreground))'
+                  }}
+                >
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  {hasPriority}
+                </Badge>
+              )}
+              
+              {ticket.tags.slice(0, 3).map(tag => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="text-xs"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              
+              {ticket.tags.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{ticket.tags.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Footer Metadata */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
               <span>{formatRelativeTime(ticket.createdAt)}</span>
             </div>
 
-            {ticket.metadata.estimate && (
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
-                <span>Estimate: {ticket.metadata.estimate}</span>
+            {ticket.metadata.dev && (
+              <div className="flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" />
+                <span>{ticket.metadata.dev}</span>
               </div>
             )}
 
-            {ticket.tags.length > 0 && (
-              <div className="flex gap-1.5 flex-wrap">
-                {ticket.tags.slice(0, 3).map(tag => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-                {ticket.tags.length > 3 && (
-                  <Badge variant="secondary" className="text-xs">
-                    +{ticket.tags.length - 3}
-                  </Badge>
-                )}
+            {ticket.metadata.estimate && (
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
+                <span>{ticket.metadata.estimate}</span>
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 }

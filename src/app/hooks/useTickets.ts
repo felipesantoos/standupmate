@@ -64,7 +64,8 @@ export function useTickets(
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(filter)]);
 
   /**
    * Create new ticket
@@ -187,13 +188,12 @@ export function useTickets(
     await loadTickets();
   }, [loadTickets]);
 
-  // Auto-load on mount
+  // Auto-load on mount and when filter changes
   useEffect(() => {
     if (autoLoad) {
       loadTickets();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoLoad]); // Only depend on autoLoad, not loadTickets (prevents infinite loop)
+  }, [autoLoad, loadTickets]); // Depend on both autoLoad and loadTickets to reload when filter changes
 
   return {
     tickets,

@@ -28,6 +28,12 @@ export interface TimeComparison {
   variance: number; // percentage
 }
 
+export interface StatusDistribution {
+  status: string;
+  count: number;
+  percentage: number;
+}
+
 export class AnalyticsService {
   /**
    * Get productivity data (tickets per day)
@@ -90,6 +96,35 @@ export class AnalyticsService {
     
     return Object.entries(counts).map(([type, count]) => ({
       type,
+      count,
+      percentage: Math.round((count / total) * 100),
+    }));
+  }
+
+  /**
+   * Get ticket status distribution
+   */
+  getStatusDistribution(tickets: Ticket[]): StatusDistribution[] {
+    const counts: Record<string, number> = {};
+    
+    // Count tickets by status
+    tickets.forEach((ticket) => {
+      const status = ticket.status;
+      counts[status] = (counts[status] || 0) + 1;
+    });
+
+    const total = tickets.length || 1;
+    
+    // Map status to friendly names
+    const statusNames: Record<string, string> = {
+      [TicketStatus.DRAFT]: 'Rascunho',
+      [TicketStatus.IN_PROGRESS]: 'Em Progresso',
+      [TicketStatus.COMPLETED]: 'Concluído',
+      [TicketStatus.ARCHIVED]: 'Arquivado',
+    };
+    
+    return Object.entries(counts).map(([status, count]) => ({
+      status: statusNames[status] || status,
       count,
       percentage: Math.round((count / total) * 100),
     }));

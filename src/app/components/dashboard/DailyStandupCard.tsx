@@ -149,10 +149,10 @@ export function DailyStandupCard({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <Badge variant="outline" className="text-green-600 border-green-600">✓</Badge>
                 No blockers
-              </p>
+              </div>
             )}
           </CollapsibleContent>
         </Collapsible>

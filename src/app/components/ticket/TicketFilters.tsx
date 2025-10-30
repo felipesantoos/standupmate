@@ -6,9 +6,10 @@
 
 import { TicketStatus } from '@core/domain/types';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
-import { Search, Filter } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@app/components/ui/input';
 import { Button } from '@app/components/ui/button';
+import { Badge } from '@app/components/ui/badge';
 
 interface TicketFiltersProps {
   filter: TicketFilter;
@@ -55,21 +56,30 @@ export function TicketFilters({ filter, onFilterChange }: TicketFiltersProps) {
   const hasActiveFilters = filter.hasAnyFilter();
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+    <div className="space-y-3">
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search tickets..."
-          value={filter.search || ''}
-          onChange={e => handleSearchChange(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search tickets..."
+            value={filter.search || ''}
+            onChange={e => handleSearchChange(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Clear Filters */}
+        {hasActiveFilters && (
+          <Button size="sm" variant="ghost" onClick={clearFilters}>
+            <X className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
-      {/* Status Filter */}
-      <div className="flex gap-2 flex-wrap">
+      {/* Status Filter Buttons */}
+      <div className="flex gap-1">
         <Button
           size="sm"
           variant={!filter.status ? 'default' : 'outline'}
@@ -106,14 +116,6 @@ export function TicketFilters({ filter, onFilterChange }: TicketFiltersProps) {
           Archived
         </Button>
       </div>
-
-      {/* Clear Filters */}
-      {hasActiveFilters && (
-        <Button size="sm" variant="ghost" onClick={clearFilters} className="w-full">
-          <Filter className="w-4 h-4 mr-2" />
-          Clear Filters
-        </Button>
-      )}
     </div>
   );
 }

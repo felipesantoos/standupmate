@@ -5,6 +5,7 @@
  * Connected with hooks.
  */
 
+import { useMemo } from 'react';
 import { useTickets, useDailyStandupTickets } from '@app/hooks/useTickets';
 import { useAnalytics } from '@app/hooks/useAnalytics';
 import { TicketStatus } from '@core/domain/types';
@@ -13,40 +14,38 @@ import { MetricsCards } from '@app/components/dashboard/MetricsCards';
 import { DailyStandupCard } from '@app/components/dashboard/DailyStandupCard';
 import { ProductivityChart } from '@app/components/dashboard/ProductivityChart';
 import { TypeDistributionChart } from '@app/components/dashboard/TypeDistributionChart';
+import { StatusDistributionChart } from '@app/components/dashboard/StatusDistributionChart';
 
 export function DashboardPage() {
-  // Get all tickets for analytics
-  const { tickets: allTickets } = useTickets(new TicketFilter(), true);
-
-  // Get stats
-  const { totalCount: inProgressCount } = useTickets(
-    new TicketFilter(TicketStatus.IN_PROGRESS),
-    true
-  );
-
-  const { totalCount: completedThisWeek } = useTickets(
-    new TicketFilter(
+  // Memoize filters to prevent infinite rerenders
+  const allTicketsFilter = useMemo(() => new TicketFilter(), []);
+  const inProgressFilter = useMemo(() => new TicketFilter(TicketStatus.IN_PROGRESS), []);
+  const draftFilter = useMemo(() => new TicketFilter(TicketStatus.DRAFT), []);
+  const completedThisWeekFilter = useMemo(
+    () => new TicketFilter(
       TicketStatus.COMPLETED,
       undefined,
       undefined,
       getWeekStart(),
       new Date()
     ),
-    true
+    []
   );
 
-  const { totalCount: draftCount } = useTickets(
-    new TicketFilter(TicketStatus.DRAFT),
-    true
-  );
+  // Get all tickets for analytics
+  const { tickets: allTickets } = useTickets(allTicketsFilter, true);
 
-  const { totalCount } = useTickets(new TicketFilter(), true);
+  // Get stats
+  const { totalCount: inProgressCount } = useTickets(inProgressFilter, true);
+  const { totalCount: completedThisWeek } = useTickets(completedThisWeekFilter, true);
+  const { totalCount: draftCount } = useTickets(draftFilter, true);
+  const { totalCount } = useTickets(allTicketsFilter, true);
 
   // Daily standup data
   const { yesterdayTickets, todayTickets, loading } = useDailyStandupTickets();
 
   // Analytics data
-  const { productivityData, typeDistribution } = useAnalytics(allTickets);
+  const { productivityData, typeDistribution, statusDistribution } = useAnalytics(allTickets);
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -65,9 +64,10 @@ export function DashboardPage() {
       />
 
       {/* Charts */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <ProductivityChart data={productivityData} loading={loading} />
         <TypeDistributionChart data={typeDistribution} loading={loading} />
+        <StatusDistributionChart data={statusDistribution} loading={loading} />
       </div>
 
       {/* Daily Standup */}
