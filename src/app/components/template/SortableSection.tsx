@@ -7,9 +7,9 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Section, Field } from '@core/domain/types';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Button } from '@app/components/ui/button';
+import { Input } from '@app/components/ui/input';
 import { GripVertical, Trash2, Plus } from 'lucide-react';
 import { FieldBuilder } from './FieldBuilder';
 

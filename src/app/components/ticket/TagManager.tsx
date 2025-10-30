@@ -6,8 +6,10 @@
 
 import { useState, KeyboardEvent } from 'react';
 import { X, Plus } from 'lucide-react';
-import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
+import { Input } from '@app/components/ui/input';
+import { Button } from '@app/components/ui/button';
+import { Badge } from '@app/components/ui/badge';
+import { Label } from '@app/components/ui/label';
 import { getTagColor } from './TagColorPicker';
 
 interface TagManagerProps {
@@ -50,7 +52,7 @@ export function TagManager({ tags, onChange, suggestions = [] }: TagManagerProps
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium">Tags</label>
+      <Label>Tags</Label>
       
       {/* Tags Display */}
       <div className="flex flex-wrap gap-2 mb-2">
@@ -60,27 +62,26 @@ export function TagManager({ tags, onChange, suggestions = [] }: TagManagerProps
             ? {
                 backgroundColor: `${customColor}20`,
                 color: customColor,
-                border: `1px solid ${customColor}40`,
+                borderColor: customColor,
               }
             : {};
           
           return (
-            <span
+            <Badge
               key={tag}
-              className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-sm ${
-                !customColor ? 'bg-primary/10 text-primary' : ''
-              }`}
-              style={style}
+              variant="outline"
+              className="gap-1"
+              style={customColor ? { borderColor: customColor, color: customColor } : {}}
             >
               {tag}
               <button
                 onClick={() => removeTag(tag)}
-                className="hover:opacity-70 rounded-sm p-0.5"
+                className="hover:opacity-70 rounded-sm ml-1"
                 type="button"
               >
                 <X className="w-3 h-3" />
               </button>
-            </span>
+            </Badge>
           );
         })}
       </div>

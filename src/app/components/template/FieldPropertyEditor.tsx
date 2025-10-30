@@ -5,10 +5,10 @@
  */
 
 import { Field, FieldType } from '@core/domain/types';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
-import { Input } from '../ui/Input';
-import { Textarea } from '../ui/Textarea';
-import { Button } from '../ui/Button';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Input } from '@app/components/ui/input';
+import { Textarea } from '@app/components/ui/textarea';
+import { Button } from '@app/components/ui/button';
 import { X } from 'lucide-react';
 import { useState } from 'react';
 

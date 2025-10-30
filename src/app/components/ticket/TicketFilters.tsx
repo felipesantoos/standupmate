@@ -7,8 +7,8 @@
 import { TicketStatus } from '@core/domain/types';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
 import { Search, Filter } from 'lucide-react';
-import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
+import { Input } from '@app/components/ui/input';
+import { Button } from '@app/components/ui/button';
 
 interface TicketFiltersProps {
   filter: TicketFilter;

@@ -5,11 +5,13 @@
  */
 
 import { Ticket } from '@core/domain/Ticket';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
-import { Button } from '../ui/Button';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Button } from '@app/components/ui/button';
+import { Badge } from '@app/components/ui/badge';
+import { Separator } from '@app/components/ui/separator';
 import { Copy, Download } from 'lucide-react';
 import { useExport } from '@app/hooks/useExport';
-import { useToast } from '../ui/Toast';
+import { toast } from 'sonner';
 
 interface DailyStandupCardProps {
   yesterdayTickets: Ticket[];
@@ -23,33 +25,32 @@ export function DailyStandupCard({
   blockers = [],
 }: DailyStandupCardProps) {
   const { generateDailyStandup, downloadAsFile } = useExport();
-  const toast = useToast();
 
   const handleCopyToClipboard = async () => {
     const markdown = await generateDailyStandup(yesterdayTickets, todayTickets, blockers);
     await navigator.clipboard.writeText(markdown);
-        toast.success('Copied!', 'Daily standup copied to clipboard.');
+        toast.success('Daily standup copied to clipboard.');
   };
 
   const handleDownload = async () => {
     const markdown = await generateDailyStandup(yesterdayTickets, todayTickets, blockers);
     const today = new Date().toISOString().split('T')[0];
     downloadAsFile(markdown, `daily-standup-${today}.md`);
-    toast.success('Download iniciado!', 'Daily standup foi baixado.');
+    toast.success('Daily standup downloaded.');
   };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>📅 Daily Standup</CardTitle>
+          <CardTitle>Daily Standup</CardTitle>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={handleCopyToClipboard}>
-              <Copy className="w-4 h-4 mr-2" />
+              <Copy className="w-4 h-4" />
               Copy
             </Button>
             <Button size="sm" variant="outline" onClick={handleDownload}>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4" />
               Download
             </Button>
           </div>
@@ -59,14 +60,22 @@ export function DailyStandupCard({
       <CardContent className="space-y-4">
         {/* Yesterday */}
         <div>
-          <h3 className="font-semibold text-foreground mb-2">Yesterday (Completed):</h3>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-semibold text-foreground">Yesterday (Completed)</h3>
+            <Badge variant="secondary">{yesterdayTickets.length}</Badge>
+          </div>
           {yesterdayTickets.length > 0 ? (
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {yesterdayTickets.map((ticket, index) => (
-                <li key={ticket.id} className="text-sm">
-                  ✅ <span className="font-medium">#{index + 1}</span>: {ticket.data['title'] || 'Untitled'}
+                <li key={ticket.id} className="text-sm flex items-start gap-2">
+                  <Badge variant="outline" className="shrink-0">
+                    {index + 1}
+                  </Badge>
+                  <span className="flex-1">{ticket.data['title'] || 'Untitled'}</span>
                   {ticket.metadata.actualTime && (
-                    <span className="text-muted-foreground ml-2">({ticket.metadata.actualTime})</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {ticket.metadata.actualTime}
+                    </Badge>
                   )}
                 </li>
               ))}
@@ -77,17 +86,27 @@ export function DailyStandupCard({
             </p>
           )}
         </div>
+        
+        <Separator />
 
         {/* Today */}
         <div>
-          <h3 className="font-semibold text-foreground mb-2">Today (In Progress):</h3>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-semibold text-foreground">Today (In Progress)</h3>
+            <Badge variant="default">{todayTickets.length}</Badge>
+          </div>
           {todayTickets.length > 0 ? (
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {todayTickets.map((ticket, index) => (
-                <li key={ticket.id} className="text-sm">
-                  🟡 <span className="font-medium">#{index + 1}</span>: {ticket.data['title'] || 'Untitled'}
+                <li key={ticket.id} className="text-sm flex items-start gap-2">
+                  <Badge variant="default" className="shrink-0">
+                    {index + 1}
+                  </Badge>
+                  <span className="flex-1">{ticket.data['title'] || 'Untitled'}</span>
                   {ticket.metadata.estimate && (
-                    <span className="text-muted-foreground ml-2">(Estimate: {ticket.metadata.estimate})</span>
+                    <Badge variant="secondary" className="text-xs">
+                      {ticket.metadata.estimate}
+                    </Badge>
                   )}
                 </li>
               ))}
@@ -98,20 +117,33 @@ export function DailyStandupCard({
             </p>
           )}
         </div>
+        
+        <Separator />
 
         {/* Blockers */}
         <div>
-          <h3 className="font-semibold text-foreground mb-3">Blockers:</h3>
-          {blockers.length > 0 ? (
-            <ul className="space-y-1">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-semibold text-foreground">Blockers</h3>
+            <Badge variant={blockers && blockers.length > 0 ? "destructive" : "outline"}>
+              {blockers?.length || 0}
+            </Badge>
+          </div>
+          {blockers && blockers.length > 0 ? (
+            <ul className="space-y-2">
               {blockers.map((blocker, index) => (
-                <li key={index} className="text-sm">
-                  ⚠️ {blocker}
+                <li key={index} className="text-sm flex items-start gap-2">
+                  <Badge variant="destructive" className="shrink-0">
+                    !
+                  </Badge>
+                  <span className="flex-1">{blocker}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No blockers</p>
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Badge variant="outline" className="text-green-600 border-green-600">✓</Badge>
+              No blockers
+            </p>
           )}
         </div>
       </CardContent>

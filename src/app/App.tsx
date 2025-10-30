@@ -10,7 +10,8 @@ import { TicketProvider } from './store/TicketContext';
 import { TemplateProvider } from './store/TemplateContext';
 import { ThemeProvider } from './store/ThemeContext';
 import { MainLayout } from './components/layouts/MainLayout';
-import { CommandPalette } from './components/ui/CommandPalette';
+// Temporarily commenting out CommandPalette until it's recreated with shadcn
+// import { CommandPalette } from './components/command/CommandPalette';
 import { useCommandPalette } from './hooks/useCommandPalette';
 import { DashboardPage } from './pages/DashboardPage';
 import { TicketsPage } from './pages/TicketsPage';
@@ -39,7 +40,8 @@ function AppContent() {
         </Route>
       </Routes>
       
-      <CommandPalette isOpen={isOpen} onClose={close} />
+      {/* Temporarily commenting out CommandPalette */}
+      {/* <CommandPalette isOpen={isOpen} onClose={close} /> */}
     </BrowserRouter>
   );
 }

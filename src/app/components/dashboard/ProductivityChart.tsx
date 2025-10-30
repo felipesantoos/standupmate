@@ -5,7 +5,7 @@
  */
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { ProductivityData } from '@core/services/AnalyticsService';
 
 interface ProductivityChartProps {

@@ -11,12 +11,14 @@ import { useState } from 'react';
 import { useTickets } from '@app/hooks/useTickets';
 import { useTemplates } from '@app/hooks/useTemplates';
 import { useExport } from '@app/hooks/useExport';
-import { useToast } from '@app/components/ui/Toast';
+import { toast } from 'sonner';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
 import { TicketList } from '@app/components/ticket/TicketList';
 import { TicketFilters } from '@app/components/ticket/TicketFilters';
 import { BatchActions } from '@app/components/ticket/BatchActions';
-import { Button } from '@app/components/ui/Button';
+import { Button } from '@app/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@app/components/ui/alert';
+import { Separator } from '@app/components/ui/separator';
 
 export function TicketsPage() {
   const [filter, setFilter] = useState<TicketFilter>(new TicketFilter());
@@ -25,7 +27,6 @@ export function TicketsPage() {
   const { tickets, loading, error, totalCount, deleteTicket, markAsCompleted, archiveTicket } = useTickets(filter);
   const { templates } = useTemplates();
   const { exportTicketsToMarkdown, downloadAsFile } = useExport();
-  const toast = useToast();
 
   // Batch export
   const handleBatchExport = async () => {
@@ -48,9 +49,9 @@ export function TicketsPage() {
         });
       }
       
-      toast.success('Exported!', `${results.length} ticket(s) exported.`);
+      toast.success(`${results.length} ticket(s) exported.`);
     } catch (error) {
-      toast.error('Error', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -60,10 +61,10 @@ export function TicketsPage() {
 
     try {
       await Promise.all(selectedTickets.map((id) => deleteTicket(id)));
-      toast.success('Deleted!', `${selectedTickets.length} ticket(s) deleted.`);
+      toast.success(`${selectedTickets.length} ticket(s) deleted.`);
       setSelectedTickets([]);
     } catch (error) {
-      toast.error('Error', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -71,10 +72,10 @@ export function TicketsPage() {
   const handleBatchComplete = async () => {
     try {
       await Promise.all(selectedTickets.map((id) => markAsCompleted(id)));
-      toast.success('Completed!', `${selectedTickets.length} ticket(s) marked as complete.`);
+      toast.success(`${selectedTickets.length} ticket(s) marked as complete.`);
       setSelectedTickets([]);
     } catch (error) {
-      toast.error('Error', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -82,19 +83,19 @@ export function TicketsPage() {
   const handleBatchArchive = async () => {
     try {
       await Promise.all(selectedTickets.map((id) => archiveTicket(id)));
-      toast.success('Archived!', `${selectedTickets.length} ticket(s) archived.`);
+      toast.success(`${selectedTickets.length} ticket(s) archived.`);
       setSelectedTickets([]);
     } catch (error) {
-      toast.error('Error', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Tickets</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-2xl font-semibold tracking-tight">Tickets</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {totalCount > 0
               ? `${totalCount} ticket${totalCount > 1 ? 's' : ''} ${filter.hasAnyFilter() ? 'found' : 'total'}`
               : 'Manage your work tickets'}
@@ -102,8 +103,8 @@ export function TicketsPage() {
         </div>
 
         <Link to="/tickets/new">
-          <Button>
-            <Plus className="w-5 h-5 mr-2" />
+          <Button size="default">
+            <Plus className="w-5 h-5" />
             New Ticket
           </Button>
         </Link>
@@ -116,10 +117,10 @@ export function TicketsPage() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-destructive/10 border border-destructive text-destructive rounded-lg p-4 mb-6">
-          <p className="font-medium">Error loading tickets:</p>
-          <p className="text-sm mt-1">{error.message}</p>
-        </div>
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Error loading tickets</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
       )}
 
       {/* Ticket List */}

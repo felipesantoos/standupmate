@@ -28,7 +28,10 @@
       "@infra/*": ["src/infra/*"],
       "@app/*": ["src/app/*"],
       "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/components/*": ["src/app/components/*"],
+      "@/hooks/*": ["src/app/hooks/*"]
     }
   },
   "include": ["src"],

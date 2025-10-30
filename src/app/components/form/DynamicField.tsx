@@ -5,7 +5,12 @@
  */
 
 import { Field, FieldType } from '@core/domain/types';
-import { Input } from '@app/components/ui/Input';
+import { Input } from '@app/components/ui/input';
+import { Textarea } from '@app/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/components/ui/select';
+import { Checkbox } from '@app/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@app/components/ui/radio-group';
+import { Label } from '@app/components/ui/label';
 import { useState } from 'react';
 
 interface DynamicFieldProps {

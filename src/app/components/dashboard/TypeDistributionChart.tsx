@@ -5,7 +5,7 @@
  */
 
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { TypeDistribution } from '@core/services/AnalyticsService';
 
 interface TypeDistributionChartProps {

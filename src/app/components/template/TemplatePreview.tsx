@@ -5,7 +5,7 @@
  */
 
 import { Template } from '@core/domain/Template';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { DynamicField } from '../form/DynamicField';
 import { useState } from 'react';
 

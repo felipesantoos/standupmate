@@ -14,13 +14,24 @@ import { Template } from '@core/domain/Template';
 import { TicketStatus } from '@core/domain/types';
 import { DynamicField } from '@app/components/form/DynamicField';
 import { TagManager } from '@app/components/ticket/TagManager';
-import { Button } from '@app/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/Card';
-import { PageSpinner } from '@app/components/ui/Spinner';
+import { Button } from '@app/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Spinner } from '@app/components/ui/spinner';
+import { Badge } from '@app/components/ui/badge';
+import { Separator } from '@app/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/components/ui/tooltip';
+
+function PageSpinner() {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <Spinner className="h-12 w-12" />
+    </div>
+  );
+}
 import { Save, ArrowLeft, Check, Play, FileDown, Undo, Redo, History, PlayCircle, CheckCircle, Download } from 'lucide-react';
 import { TicketHistoryTimeline } from '@app/components/ticket/TicketHistoryTimeline';
 import { v4 as uuidv4 } from 'uuid';
-import { useToast } from '@app/components/ui/Toast';
+import { toast } from 'sonner';
 import { useKeyboardShortcuts, SHORTCUTS } from '@app/hooks/useKeyboardShortcuts';
 import { useExport } from '@app/hooks/useExport';
 import { useUndoRedo } from '@app/hooks/useUndoRedo';
@@ -31,7 +42,6 @@ export function TicketEditPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const isNew = location.pathname === '/tickets/new';
-  const toast = useToast();
   const { exportTicketToMarkdown, downloadAsFile } = useExport();
 
   const { tickets, loading: ticketsLoading, createTicket, updateTicket } = useTickets();
@@ -247,21 +257,21 @@ export function TicketEditPage() {
   // Save ticket
   const handleSave = async () => {
     if (!validate()) {
-      toast.warning('Validation failed', 'Please fix errors before saving.');
+      toast.warning('Please fix errors before saving.');
       return;
     }
 
     try {
       if (isNew && ticket) {
         await createTicket(ticket);
-        toast.success('Ticket created!', 'Ticket was created successfully.');
+        toast.success('Ticket was created successfully.');
         navigate('/tickets');
       } else if (ticket) {
         await updateTicket(ticket.id, ticket);
-        toast.success('Saved!', 'Ticket updated successfully.');
+        toast.success('Ticket updated successfully.');
       }
     } catch (error) {
-      toast.error('Error saving', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -328,7 +338,7 @@ export function TicketEditPage() {
         setTicketHistory(newHistory);
         localStorage.setItem(`ticket-history-${ticket.id}`, JSON.stringify(newHistory));
         
-        toast.success('Complete!', 'Ticket marked as complete.');
+        toast.success('Ticket marked as complete.');
       }
     } catch (error) {
       toast.error('Erro', (error as Error).message);
@@ -347,9 +357,9 @@ export function TicketEditPage() {
         .replace(/[^a-z0-9-]/g, '');
       
       downloadAsFile(markdown, filename);
-      toast.success('Exported!', 'Ticket exported as Markdown.');
+      toast.success('Ticket exported as Markdown.');
     } catch (error) {
-      toast.error('Error exporting', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 

@@ -5,7 +5,7 @@
  */
 
 import { TicketChange, ChangeType } from '@core/domain/TicketHistory';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { Clock, Edit, CheckCircle, Archive, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { enUS } from 'date-fns/locale';
@@ -35,13 +35,13 @@ export function TicketHistoryTimeline({ changes }: TicketHistoryTimelineProps) {
   const getColor = (type: ChangeType) => {
     switch (type) {
       case ChangeType.CREATED:
-        return 'text-blue-500';
+        return 'text-foreground';
       case ChangeType.COMPLETED:
-        return 'text-green-500';
+        return 'text-green-600';
       case ChangeType.ARCHIVED:
-        return 'text-gray-500';
+        return 'text-muted-foreground';
       case ChangeType.STATUS_CHANGED:
-        return 'text-yellow-500';
+        return 'text-foreground';
       default:
         return 'text-muted-foreground';
     }

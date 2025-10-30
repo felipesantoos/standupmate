@@ -5,10 +5,10 @@
  */
 
 import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
-import { Button } from '../ui/Button';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Button } from '@app/components/ui/button';
 import { X, Upload, FileJson } from 'lucide-react';
-import { useToast } from '../ui/Toast';
+import { toast } from 'sonner';
 import { useTemplates } from '@app/hooks/useTemplates';
 
 interface ImportTemplateModalProps {
@@ -19,7 +19,6 @@ export function ImportTemplateModal({ onClose }: ImportTemplateModalProps) {
   const [jsonContent, setJsonContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<any>(null);
-  const toast = useToast();
   const { importFromJSON } = useTemplates();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,7 +26,7 @@ export function ImportTemplateModal({ onClose }: ImportTemplateModalProps) {
     if (!selectedFile) return;
 
     if (!selectedFile.name.endsWith('.json')) {
-      toast.error('Invalid file', 'Please select a JSON file.');
+      toast.error('Please select a JSON file.');
       return;
     }
 
@@ -44,7 +43,7 @@ export function ImportTemplateModal({ onClose }: ImportTemplateModalProps) {
         const parsed = JSON.parse(content);
         setPreview(parsed);
       } catch (error) {
-        toast.error('Invalid JSON', 'Could not parse JSON file.');
+        toast.error('Could not parse JSON file.');
       }
     };
     reader.readAsText(selectedFile);
@@ -52,16 +51,16 @@ export function ImportTemplateModal({ onClose }: ImportTemplateModalProps) {
 
   const handleImport = async () => {
     if (!jsonContent) {
-      toast.warning('No file', 'Please select a JSON file.');
+      toast.warning('Please select a JSON file.');
       return;
     }
 
     try {
       await importFromJSON(jsonContent);
-      toast.success('Imported!', 'Template imported successfully.');
+      toast.success('Template imported successfully.');
       onClose();
     } catch (error) {
-      toast.error('Error importing', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 

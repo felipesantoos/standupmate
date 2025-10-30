@@ -9,7 +9,7 @@ import { useTickets, useDailyStandupTickets } from '@app/hooks/useTickets';
 import { useAnalytics } from '@app/hooks/useAnalytics';
 import { TicketStatus } from '@core/domain/types';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
-import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { DailyStandupCard } from '@app/components/dashboard/DailyStandupCard';
 import { ProductivityChart } from '@app/components/dashboard/ProductivityChart';
 import { TypeDistributionChart } from '@app/components/dashboard/TypeDistributionChart';
@@ -43,14 +43,14 @@ export function DashboardPage() {
   const { productivityData, typeDistribution } = useAnalytics(allTickets);
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Overview of your work</p>
+    <div className="flex flex-1 flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">Overview of your work</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -58,7 +58,7 @@ export function DashboardPage() {
                 <p className="text-sm font-medium text-muted-foreground">In Progress</p>
                 <p className="text-3xl font-bold text-foreground mt-2">{inProgressCount}</p>
               </div>
-              <Clock className="w-10 h-10 text-yellow-500" />
+              <Clock className="w-10 h-10 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -72,7 +72,7 @@ export function DashboardPage() {
                 </p>
                 <p className="text-3xl font-bold text-foreground mt-2">{completedThisWeek}</p>
               </div>
-              <CheckCircle className="w-10 h-10 text-green-500" />
+              <CheckCircle className="w-10 h-10 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -86,14 +86,14 @@ export function DashboardPage() {
                   {completedThisWeek > 0 ? '↗️' : '-'}
                 </p>
               </div>
-              <TrendingUp className="w-10 h-10 text-primary" />
+              <TrendingUp className="w-10 h-10 text-foreground" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProductivityChart data={productivityData} />
         <TypeDistributionChart data={typeDistribution} />
       </div>

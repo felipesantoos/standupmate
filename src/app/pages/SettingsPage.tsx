@@ -5,8 +5,8 @@
  */
 
 import { TagColorPicker } from '@app/components/ticket/TagColorPicker';
-import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/Card';
-import { Button } from '@app/components/ui/Button';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Button } from '@app/components/ui/button';
 import { Trash2, Download } from 'lucide-react';
 
 export function SettingsPage() {

@@ -10,11 +10,19 @@ import { useEffect, useState } from 'react';
 import { Template } from '@core/domain/Template';
 import { Section, Field, FieldType } from '@core/domain/types';
 import { useTemplates } from '@app/hooks/useTemplates';
-import { useToast } from '@app/components/ui/Toast';
-import { Button } from '@app/components/ui/Button';
-import { Input } from '@app/components/ui/Input';
-import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/Card';
-import { PageSpinner } from '@app/components/ui/Spinner';
+import { toast } from 'sonner';
+import { Button } from '@app/components/ui/button';
+import { Input } from '@app/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Spinner } from '@app/components/ui/spinner';
+
+export function PageSpinner() {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <Spinner className="h-12 w-12" />
+    </div>
+  );
+}
 import { SectionBuilder } from '@app/components/template/SectionBuilder';
 import { FieldPropertyEditor } from '@app/components/template/FieldPropertyEditor';
 import { TemplatePreview } from '@app/components/template/TemplatePreview';
@@ -25,7 +33,6 @@ export function TemplateBuilderPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isNew = id === 'new';
-  const toast = useToast();
 
   const { templates, createTemplate, updateTemplate } = useTemplates();
 
@@ -181,14 +188,14 @@ export function TemplateBuilderPage() {
 
       if (isNew) {
         await createTemplate(template);
-        toast.success('Created!', 'Template created successfully.');
+        toast.success('Template created successfully.');
         navigate('/templates');
       } else {
         await updateTemplate(template.id, template);
-        toast.success('Saved!', 'Template updated successfully.');
+        toast.success('Template updated successfully.');
       }
     } catch (error) {
-      toast.error('Error', (error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 

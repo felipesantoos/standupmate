@@ -4,7 +4,8 @@
  * Toolbar for batch operations on selected tickets.
  */
 
-import { Button } from '../ui/Button';
+import { Button } from '@app/components/ui/button';
+import { Badge } from '@app/components/ui/badge';
 import { Download, Trash2, Archive, CheckCircle } from 'lucide-react';
 
 interface BatchActionsProps {

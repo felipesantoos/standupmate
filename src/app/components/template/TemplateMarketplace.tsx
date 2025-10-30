@@ -7,11 +7,11 @@
 import { useState } from 'react';
 import { Template } from '@core/domain/Template';
 import { FieldType } from '@core/domain/types';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../ui/Card';
-import { Button } from '../ui/Button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
+import { Button } from '@app/components/ui/button';
 import { Download, Check } from 'lucide-react';
 import { useTemplates } from '@app/hooks/useTemplates';
-import { useToast } from '../ui/Toast';
+import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 
 const MARKETPLACE_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
@@ -365,7 +365,6 @@ const MARKETPLACE_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] 
 export function TemplateMarketplace() {
   const [installing, setInstalling] = useState<string | null>(null);
   const { createTemplate } = useTemplates();
-  const toast = useToast();
 
   const installTemplate = async (templateData: typeof MARKETPLACE_TEMPLATES[0]) => {
     setInstalling(templateData.name);
@@ -385,9 +384,9 @@ export function TemplateMarketplace() {
       );
 
       await createTemplate(template);
-      toast.success('Installed!', `Template "${templateData.name}" added successfully.`);
+      toast.success(`Template "${templateData.name}" added successfully.`);
     } catch (error) {
-      toast.error('Erro', (error as Error).message);
+      toast.error((error as Error).message);
     } finally {
       setInstalling(null);
     }
