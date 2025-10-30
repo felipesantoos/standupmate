@@ -5,40 +5,65 @@
  */
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
+import { Skeleton } from '@app/components/ui/skeleton';
 import { ProductivityData } from '@core/services/AnalyticsService';
 
 interface ProductivityChartProps {
   data: ProductivityData[];
+  loading?: boolean;
 }
 
-export function ProductivityChart({ data }: ProductivityChartProps) {
+export function ProductivityChart({ data, loading }: ProductivityChartProps) {
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-32 mt-2" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[250px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
-            <CardTitle>Productivity (Last 7 Days)</CardTitle>
+        <CardTitle>Productivity</CardTitle>
+        <CardDescription>Tickets created vs completed (Last 7 Days)</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={250}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
             <XAxis 
               dataKey="date" 
               className="text-xs"
-              tickFormatter={(date) => new Date(date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
             />
-            <YAxis className="text-xs" />
+            <YAxis className="text-xs" tickLine={false} axisLine={false} />
             <Tooltip 
-              labelFormatter={(date) => new Date(date).toLocaleDateString('pt-BR')}
-              contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+              labelFormatter={(date) => new Date(date).toLocaleDateString('en-US')}
+              contentStyle={{ 
+                backgroundColor: 'hsl(var(--card))', 
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
             />
             <Legend />
             <Line 
               type="monotone" 
               dataKey="completed" 
-              stroke="hsl(var(--primary))" 
+              stroke="hsl(var(--foreground))" 
               name="Completed"
               strokeWidth={2}
+              dot={{ fill: 'hsl(var(--foreground))' }}
             />
             <Line 
               type="monotone" 
@@ -47,6 +72,7 @@ export function ProductivityChart({ data }: ProductivityChartProps) {
               name="Created"
               strokeWidth={2}
               strokeDasharray="5 5"
+              dot={{ fill: 'hsl(var(--muted-foreground))' }}
             />
           </LineChart>
         </ResponsiveContainer>

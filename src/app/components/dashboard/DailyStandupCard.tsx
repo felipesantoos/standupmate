@@ -9,7 +9,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/car
 import { Button } from '@app/components/ui/button';
 import { Badge } from '@app/components/ui/badge';
 import { Separator } from '@app/components/ui/separator';
-import { Copy, Download } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@app/components/ui/collapsible';
+import { Copy, Download, ChevronDown } from 'lucide-react';
 import { useExport } from '@app/hooks/useExport';
 import { toast } from 'sonner';
 
@@ -59,93 +60,102 @@ export function DailyStandupCard({
 
       <CardContent className="space-y-4">
         {/* Yesterday */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="flex items-center gap-2 mb-2 w-full hover:opacity-70 transition-opacity">
             <h3 className="font-semibold text-foreground">Yesterday (Completed)</h3>
             <Badge variant="secondary">{yesterdayTickets.length}</Badge>
-          </div>
-          {yesterdayTickets.length > 0 ? (
-            <ul className="space-y-2">
-              {yesterdayTickets.map((ticket, index) => (
-                <li key={ticket.id} className="text-sm flex items-start gap-2">
-                  <Badge variant="outline" className="shrink-0">
-                    {index + 1}
-                  </Badge>
-                  <span className="flex-1">{ticket.data['title'] || 'Untitled'}</span>
-                  {ticket.metadata.actualTime && (
-                    <Badge variant="secondary" className="text-xs">
-                      {ticket.metadata.actualTime}
+            <ChevronDown className="h-4 w-4 ml-auto transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {yesterdayTickets.length > 0 ? (
+              <ul className="space-y-2">
+                {yesterdayTickets.map((ticket, index) => (
+                  <li key={ticket.id} className="text-sm flex items-start gap-2">
+                    <Badge variant="outline" className="shrink-0">
+                      {index + 1}
                     </Badge>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">
-              No tickets completed yesterday
-            </p>
-          )}
-        </div>
+                    <span className="flex-1">{ticket.data['title'] || 'Untitled'}</span>
+                    {ticket.metadata.actualTime && (
+                      <Badge variant="secondary" className="text-xs">
+                        {ticket.metadata.actualTime}
+                      </Badge>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                No tickets completed yesterday
+              </p>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
         
         <Separator />
 
         {/* Today */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="flex items-center gap-2 mb-2 w-full hover:opacity-70 transition-opacity">
             <h3 className="font-semibold text-foreground">Today (In Progress)</h3>
             <Badge variant="default">{todayTickets.length}</Badge>
-          </div>
-          {todayTickets.length > 0 ? (
-            <ul className="space-y-2">
-              {todayTickets.map((ticket, index) => (
-                <li key={ticket.id} className="text-sm flex items-start gap-2">
-                  <Badge variant="default" className="shrink-0">
-                    {index + 1}
-                  </Badge>
-                  <span className="flex-1">{ticket.data['title'] || 'Untitled'}</span>
-                  {ticket.metadata.estimate && (
-                    <Badge variant="secondary" className="text-xs">
-                      {ticket.metadata.estimate}
+            <ChevronDown className="h-4 w-4 ml-auto transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {todayTickets.length > 0 ? (
+              <ul className="space-y-2">
+                {todayTickets.map((ticket, index) => (
+                  <li key={ticket.id} className="text-sm flex items-start gap-2">
+                    <Badge variant="default" className="shrink-0">
+                      {index + 1}
                     </Badge>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">
-              No tickets in progress today
-            </p>
-          )}
-        </div>
+                    <span className="flex-1">{ticket.data['title'] || 'Untitled'}</span>
+                    {ticket.metadata.estimate && (
+                      <Badge variant="secondary" className="text-xs">
+                        {ticket.metadata.estimate}
+                      </Badge>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                No tickets in progress today
+              </p>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
         
         <Separator />
 
         {/* Blockers */}
-        <div>
-          <div className="flex items-center gap-2 mb-2">
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="flex items-center gap-2 mb-2 w-full hover:opacity-70 transition-opacity">
             <h3 className="font-semibold text-foreground">Blockers</h3>
             <Badge variant={blockers && blockers.length > 0 ? "destructive" : "outline"}>
               {blockers?.length || 0}
             </Badge>
-          </div>
-          {blockers && blockers.length > 0 ? (
-            <ul className="space-y-2">
-              {blockers.map((blocker, index) => (
-                <li key={index} className="text-sm flex items-start gap-2">
-                  <Badge variant="destructive" className="shrink-0">
-                    !
-                  </Badge>
-                  <span className="flex-1">{blocker}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Badge variant="outline" className="text-green-600 border-green-600">✓</Badge>
-              No blockers
-            </p>
-          )}
-        </div>
+            <ChevronDown className="h-4 w-4 ml-auto transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            {blockers && blockers.length > 0 ? (
+              <ul className="space-y-2">
+                {blockers.map((blocker, index) => (
+                  <li key={index} className="text-sm flex items-start gap-2">
+                    <Badge variant="destructive" className="shrink-0">
+                      !
+                    </Badge>
+                    <span className="flex-1">{blocker}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Badge variant="outline" className="text-green-600 border-green-600">✓</Badge>
+                No blockers
+              </p>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );

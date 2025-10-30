@@ -9,11 +9,10 @@ import { useTickets, useDailyStandupTickets } from '@app/hooks/useTickets';
 import { useAnalytics } from '@app/hooks/useAnalytics';
 import { TicketStatus } from '@core/domain/types';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
-import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
+import { MetricsCards } from '@app/components/dashboard/MetricsCards';
 import { DailyStandupCard } from '@app/components/dashboard/DailyStandupCard';
 import { ProductivityChart } from '@app/components/dashboard/ProductivityChart';
 import { TypeDistributionChart } from '@app/components/dashboard/TypeDistributionChart';
-import { Clock, CheckCircle, TrendingUp } from 'lucide-react';
 
 export function DashboardPage() {
   // Get all tickets for analytics
@@ -36,6 +35,13 @@ export function DashboardPage() {
     true
   );
 
+  const { totalCount: draftCount } = useTickets(
+    new TicketFilter(TicketStatus.DRAFT),
+    true
+  );
+
+  const { totalCount } = useTickets(new TicketFilter(), true);
+
   // Daily standup data
   const { yesterdayTickets, todayTickets, loading } = useDailyStandupTickets();
 
@@ -50,52 +56,18 @@ export function DashboardPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">In Progress</p>
-                <p className="text-3xl font-bold text-foreground mt-2">{inProgressCount}</p>
-              </div>
-              <Clock className="w-10 h-10 text-muted-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Completed (Week)
-                </p>
-                <p className="text-3xl font-bold text-foreground mt-2">{completedThisWeek}</p>
-              </div>
-              <CheckCircle className="w-10 h-10 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Productivity</p>
-                <p className="text-3xl font-bold text-foreground mt-2">
-                  {completedThisWeek > 0 ? '↗️' : '-'}
-                </p>
-              </div>
-              <TrendingUp className="w-10 h-10 text-foreground" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <MetricsCards
+        inProgressCount={inProgressCount}
+        completedThisWeek={completedThisWeek}
+        totalCount={totalCount}
+        draftCount={draftCount}
+        loading={loading}
+      />
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ProductivityChart data={productivityData} />
-        <TypeDistributionChart data={typeDistribution} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <ProductivityChart data={productivityData} loading={loading} />
+        <TypeDistributionChart data={typeDistribution} loading={loading} />
       </div>
 
       {/* Daily Standup */}
