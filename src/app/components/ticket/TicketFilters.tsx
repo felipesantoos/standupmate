@@ -1,0 +1,120 @@
+/**
+ * Ticket Filters Component
+ * 
+ * Filter controls for ticket list.
+ */
+
+import { TicketStatus } from '@core/domain/types';
+import { TicketFilter } from '@core/services/filters/TicketFilter';
+import { Search, Filter } from 'lucide-react';
+import { Input } from '../ui/Input';
+import { Button } from '../ui/Button';
+
+interface TicketFiltersProps {
+  filter: TicketFilter;
+  onFilterChange: (filter: TicketFilter) => void;
+}
+
+export function TicketFilters({ filter, onFilterChange }: TicketFiltersProps) {
+  const handleSearchChange = (search: string) => {
+    const newFilter = new TicketFilter(
+      filter.status,
+      filter.templateId,
+      filter.tags,
+      filter.dateFrom,
+      filter.dateTo,
+      search,
+      filter.page,
+      filter.pageSize,
+      filter.sortBy,
+      filter.sortOrder
+    );
+    onFilterChange(newFilter);
+  };
+
+  const handleStatusChange = (status?: TicketStatus) => {
+    const newFilter = new TicketFilter(
+      status,
+      filter.templateId,
+      filter.tags,
+      filter.dateFrom,
+      filter.dateTo,
+      filter.search,
+      filter.page,
+      filter.pageSize,
+      filter.sortBy,
+      filter.sortOrder
+    );
+    onFilterChange(newFilter);
+  };
+
+  const clearFilters = () => {
+    onFilterChange(new TicketFilter());
+  };
+
+  const hasActiveFilters = filter.hasAnyFilter();
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search tickets..."
+          value={filter.search || ''}
+          onChange={e => handleSearchChange(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Status Filter */}
+      <div className="flex gap-2 flex-wrap">
+        <Button
+          size="sm"
+          variant={!filter.status ? 'default' : 'outline'}
+          onClick={() => handleStatusChange(undefined)}
+        >
+          All
+        </Button>
+        <Button
+          size="sm"
+          variant={filter.status === TicketStatus.DRAFT ? 'default' : 'outline'}
+          onClick={() => handleStatusChange(TicketStatus.DRAFT)}
+        >
+          Draft
+        </Button>
+        <Button
+          size="sm"
+          variant={filter.status === TicketStatus.IN_PROGRESS ? 'default' : 'outline'}
+          onClick={() => handleStatusChange(TicketStatus.IN_PROGRESS)}
+        >
+          In Progress
+        </Button>
+        <Button
+          size="sm"
+          variant={filter.status === TicketStatus.COMPLETED ? 'default' : 'outline'}
+          onClick={() => handleStatusChange(TicketStatus.COMPLETED)}
+        >
+          Complete
+        </Button>
+        <Button
+          size="sm"
+          variant={filter.status === TicketStatus.ARCHIVED ? 'default' : 'outline'}
+          onClick={() => handleStatusChange(TicketStatus.ARCHIVED)}
+        >
+          Archived
+        </Button>
+      </div>
+
+      {/* Clear Filters */}
+      {hasActiveFilters && (
+        <Button size="sm" variant="ghost" onClick={clearFilters} className="w-full">
+          <Filter className="w-4 h-4 mr-2" />
+          Clear Filters
+        </Button>
+      )}
+    </div>
+  );
+}
+

@@ -1,0 +1,50 @@
+.
+|-- IMPLEMENTATION_COMPLETE.md
+|-- IMPLEMENTATION_SUMMARY.md
+|-- NEXT_STEPS.md
+|-- PROGRESS.md
+|-- PROJECT_STRUCTURE.txt
+|-- README.md
+|-- docs
+|   |-- ARCHITECTURE.md
+|   `-- DEVELOPMENT.md
+|-- index.html
+|-- package.json
+|-- postcss.config.js
+|-- src
+|   |-- app
+|   |   |-- App.tsx
+|   |   |-- components
+|   |   |-- hooks
+|   |   |-- mappers
+|   |   |-- pages
+|   |   `-- store
+|   |-- core
+|   |   |-- domain
+|   |   |-- exceptions
+|   |   |-- interfaces
+|   |   `-- services
+|   |-- infra
+|   |   `-- database
+|   |-- lib
+|   |-- main.tsx
+|   |-- styles
+|   |   `-- global.css
+|   |-- types
+|   `-- utils
+|-- tailwind.config.js
+|-- tests
+|   |-- e2e
+|   |-- integration
+|   |   `-- repositories
+|   |-- setup.ts
+|   `-- unit
+|       |-- domain
+|       |-- mappers
+|       `-- services
+|-- tsconfig.json
+|-- tsconfig.node.json
+|-- vite.config.ts
+`-- vitest.config.ts
+
+28 directories, 20 files
