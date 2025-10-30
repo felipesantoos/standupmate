@@ -1,8 +1,8 @@
-# 📋 Ticket Tracker
+# 🤝 StandupMate
 
-**Sistema de Tracking de Trabalho com Arquitetura Hexagonal**
+**Your Daily Standup Assistant**
 
-Sistema flexível e dinâmico para rastreamento de trabalho, permitindo planejar, registrar informações importantes e acompanhar o progresso de tickets.
+Sistema flexível e dinâmico para rastreamento de trabalho, permitindo planejar, registrar informações importantes e acompanhar o progresso de tickets. Projetado para facilitar suas daily standups com arquitetura hexagonal profissional.
 
 ---
 
@@ -91,7 +91,7 @@ src/
 ```bash
 # 1. Clone repository
 git clone <repository-url>
-cd ticket-tracker
+cd standupmate
 
 # 2. Install dependencies
 npm install
@@ -111,7 +111,7 @@ npm run build
 ## 📁 Estrutura do Projeto
 
 ```
-ticket-tracker/
+standupmate/
 ├── src/
 │   ├── core/                       # Core business logic
 │   │   ├── domain/                 # Domain models (pure TS)

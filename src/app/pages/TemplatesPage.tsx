@@ -5,7 +5,7 @@
  * Connected with useTemplates hook.
  */
 
-import { Plus, Star, Copy, Download, Trash2, Edit, Upload, Layout, Store, MoreVertical, Search, AlertCircle } from 'lucide-react';
+import { Plus, Star, Copy, Download, Trash2, Edit, Upload, Layout, Store, MoreVertical, Search, AlertCircle, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { useTemplates } from '@app/hooks/useTemplates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
@@ -14,6 +14,7 @@ import { Badge } from '@app/components/ui/badge';
 import { toast } from 'sonner';
 import { ImportTemplateModal } from '@app/components/template/ImportTemplateModal';
 import { TemplateMarketplace } from '@app/components/template/TemplateMarketplace';
+import { TemplatePreviewModal } from '@app/components/template/TemplatePreviewModal';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@app/components/ui/empty';
 import { Skeleton } from '@app/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@app/components/ui/tabs';
@@ -71,7 +72,9 @@ export function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<{ id: string; name: string } | null>(null);
+  const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
   const [duplicateName, setDuplicateName] = useState('');
   
   const { 
@@ -93,7 +96,7 @@ export function TemplatesPage() {
   const handleSetDefault = async (id: string) => {
     try {
       await setAsDefault(id);
-      toast.success('Template definido como padrão.');
+      toast.success('Template set as default.');
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -101,7 +104,7 @@ export function TemplatesPage() {
 
   const openDuplicateDialog = (id: string, name: string) => {
     setSelectedTemplate({ id, name });
-    setDuplicateName(`${name} (cópia)`);
+    setDuplicateName(`${name} (copy)`);
     setDuplicateDialogOpen(true);
   };
 
@@ -110,7 +113,7 @@ export function TemplatesPage() {
 
     try {
       await duplicateTemplate(selectedTemplate.id, duplicateName);
-      toast.success('Template duplicado com sucesso.');
+      toast.success('Template duplicated successfully.');
       setDuplicateDialogOpen(false);
       setDuplicateName('');
     } catch (err) {
@@ -128,7 +131,7 @@ export function TemplatesPage() {
       link.download = `${name.toLowerCase().replace(/\s+/g, '-')}.json`;
       link.click();
       URL.revokeObjectURL(url);
-      toast.success('Template exportado com sucesso.');
+      toast.success('Template exported successfully.');
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -144,11 +147,16 @@ export function TemplatesPage() {
 
     try {
       await deleteTemplate(selectedTemplate.id);
-      toast.success('Template removido com sucesso.');
+      toast.success('Template deleted successfully.');
       setDeleteDialogOpen(false);
     } catch (err) {
       toast.error((err as Error).message);
     }
+  };
+
+  const openPreviewModal = (template: any) => {
+    setPreviewTemplate(template);
+    setPreviewModalOpen(true);
   };
 
   return (
@@ -160,19 +168,19 @@ export function TemplatesPage() {
             <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
             <p className="text-muted-foreground mt-1">
               {templates.length > 0
-                ? `Gerencie seus ${templates.length} template${templates.length > 1 ? 's' : ''}`
-                : 'Gerencie templates de formulários'}
+                ? `Manage your ${templates.length} template${templates.length > 1 ? 's' : ''}`
+                : 'Manage form templates'}
             </p>
           </div>
 
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowImportModal(true)}>
               <Upload className="w-4 h-4 mr-2" />
-              Importar
+              Import
             </Button>
             <Button onClick={() => window.location.href = '/templates/builder/new'}>
               <Plus className="w-4 h-4 mr-2" />
-              Novo Template
+              New Template
             </Button>
           </div>
         </div>
@@ -181,7 +189,7 @@ export function TemplatesPage() {
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Erro ao carregar templates</AlertTitle>
+            <AlertTitle>Error loading templates</AlertTitle>
             <AlertDescription>{error.message}</AlertDescription>
           </Alert>
         )}
@@ -191,7 +199,7 @@ export function TemplatesPage() {
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="my-templates">
               <Layout className="w-4 h-4 mr-2" />
-              Meus Templates
+              My Templates
             </TabsTrigger>
             <TabsTrigger value="marketplace">
               <Store className="w-4 h-4 mr-2" />
@@ -206,7 +214,7 @@ export function TemplatesPage() {
               <div className="relative max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar templates..."
+                  placeholder="Search templates..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9"
@@ -221,10 +229,10 @@ export function TemplatesPage() {
             {!loading && templates.length === 0 && (
               <EmptyState
                 icon={Layout}
-                title="Nenhum template encontrado"
-                description="Crie seu primeiro template para começar a personalizar seus tickets."
+                title="No templates found"
+                description="Create your first template to start customizing your tickets."
                 action={{
-                  label: 'Criar Template',
+                  label: 'Create Template',
                   onClick: () => (window.location.href = '/templates/builder/new'),
                 }}
               />
@@ -245,12 +253,12 @@ export function TemplatesPage() {
                                 <TooltipTrigger asChild>
                                   <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
                                 </TooltipTrigger>
-                                <TooltipContent>Template padrão</TooltipContent>
+                                <TooltipContent>Default template</TooltipContent>
                               </Tooltip>
                             )}
                           </CardTitle>
                           <CardDescription className="mt-1.5 line-clamp-2">
-                            {template.description || 'Sem descrição'}
+                            {template.description || 'No description'}
                           </CardDescription>
                         </div>
                         
@@ -261,23 +269,27 @@ export function TemplatesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => openPreviewModal(template)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Preview
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => window.location.href = `/templates/builder/${template.id}`}>
                               <Edit className="w-4 h-4 mr-2" />
-                              Editar
+                              Edit
                             </DropdownMenuItem>
                             {!template.isDefault && (
                               <DropdownMenuItem onClick={() => handleSetDefault(template.id)}>
                                 <Star className="w-4 h-4 mr-2" />
-                                Definir como padrão
+                                Set as default
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem onClick={() => openDuplicateDialog(template.id, template.name)}>
                               <Copy className="w-4 h-4 mr-2" />
-                              Duplicar
+                              Duplicate
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleExport(template.id, template.name)}>
                               <Download className="w-4 h-4 mr-2" />
-                              Exportar
+                              Export
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -285,7 +297,7 @@ export function TemplatesPage() {
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Excluir
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -298,10 +310,10 @@ export function TemplatesPage() {
                           v{template.version}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {template.sections.length} {template.sections.length === 1 ? 'seção' : 'seções'}
+                          {template.sections.length} {template.sections.length === 1 ? 'section' : 'sections'}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {template.getTotalFieldCount()} {template.getTotalFieldCount() === 1 ? 'campo' : 'campos'}
+                          {template.getTotalFieldCount()} {template.getTotalFieldCount() === 1 ? 'field' : 'fields'}
                         </Badge>
                       </div>
                     </CardContent>
@@ -314,9 +326,9 @@ export function TemplatesPage() {
             {!loading && templates.length > 0 && filteredTemplates.length === 0 && (
               <div className="text-center py-12">
                 <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Nenhum template encontrado</h3>
+                <h3 className="text-lg font-semibold mb-2">No templates found</h3>
                 <p className="text-muted-foreground">
-                  Tente ajustar sua busca ou crie um novo template.
+                  Try adjusting your search or create a new template.
                 </p>
               </div>
             )}
@@ -332,16 +344,16 @@ export function TemplatesPage() {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>
-                Tem certeza que deseja excluir o template "{selectedTemplate?.name}"? 
-                Esta ação não pode ser desfeita.
+                Are you sure you want to delete the template "{selectedTemplate?.name}"? 
+                This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Excluir
+                Delete
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -351,19 +363,19 @@ export function TemplatesPage() {
         <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Duplicar Template</DialogTitle>
+              <DialogTitle>Duplicate Template</DialogTitle>
               <DialogDescription>
-                Digite o nome para o template duplicado.
+                Enter the name for the duplicated template.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="template-name">Nome do Template</Label>
+                <Label htmlFor="template-name">Template Name</Label>
                 <Input
                   id="template-name"
                   value={duplicateName}
                   onChange={(e) => setDuplicateName(e.target.value)}
-                  placeholder="Nome do template..."
+                  placeholder="Template name..."
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && duplicateName.trim()) {
                       handleDuplicate();
@@ -374,10 +386,10 @@ export function TemplatesPage() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDuplicateDialogOpen(false)}>
-                Cancelar
+                Cancel
               </Button>
               <Button onClick={handleDuplicate} disabled={!duplicateName.trim()}>
-                Duplicar
+                Duplicate
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -385,6 +397,15 @@ export function TemplatesPage() {
 
         {/* Import Modal */}
         {showImportModal && <ImportTemplateModal onClose={() => setShowImportModal(false)} />}
+        
+        {/* Preview Modal */}
+        {previewTemplate && (
+          <TemplatePreviewModal 
+            template={previewTemplate} 
+            open={previewModalOpen} 
+            onOpenChange={setPreviewModalOpen} 
+          />
+        )}
       </div>
     </TooltipProvider>
   );

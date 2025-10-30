@@ -7,9 +7,13 @@
 import { TagColorPicker } from '@app/components/ticket/TagColorPicker';
 import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { Button } from '@app/components/ui/button';
-import { Trash2, Download } from 'lucide-react';
+import { Trash2, Download, Upload } from 'lucide-react';
+import { useExport } from '@app/hooks/useExport';
+import { toast } from 'sonner';
 
 export function SettingsPage() {
+  const { exportDatabaseAsJSON, downloadAsFile, loading } = useExport();
+
   const clearDatabase = () => {
     if (!confirm('Are you sure? All data will be lost!')) return;
     
@@ -17,20 +21,68 @@ export function SettingsPage() {
     window.location.reload();
   };
 
-  const exportAllData = () => {
-    const allData = {
-      database: localStorage.getItem('ticket-tracker-db'),
-      tagColors: localStorage.getItem('tag-colors'),
-      filterPresets: localStorage.getItem('filter-presets'),
-    };
+  const exportAllData = async () => {
+    try {
+      toast.info('Exportando banco de dados...');
+      const json = await exportDatabaseAsJSON();
+      const filename = `standupmate-backup-${new Date().toISOString().split('T')[0]}.json`;
+      downloadAsFile(json, filename);
+      toast.success('Backup exportado com sucesso!');
+    } catch (error) {
+      console.error('Failed to export backup:', error);
+      toast.error('Erro ao exportar backup: ' + (error as Error).message);
+    }
+  };
 
-    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const importBackup = () => {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = async (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      const file = target.files?.[0];
+      
+      if (!file) return;
+      
+      try {
+        // Read file content
+        const text = await file.text();
+        const backupData = JSON.parse(text);
+        
+        // Validate backup structure
+        if (typeof backupData !== 'object' || backupData === null) {
+          alert('Invalid backup file format!');
+          return;
+        }
+        
+        // Confirm with user
+        if (!confirm('Replace current database with backup? All current data will be lost!')) {
+          return;
+        }
+        
+        // Restore data to localStorage
+        if (backupData.database) {
+          localStorage.setItem('standupmate-db', backupData.database);
+        }
+        if (backupData.tagColors) {
+          localStorage.setItem('tag-colors', backupData.tagColors);
+        }
+        if (backupData.filterPresets) {
+          localStorage.setItem('filter-presets', backupData.filterPresets);
+        }
+        
+        // Reload page to apply changes
+        window.location.reload();
+      } catch (error) {
+        console.error('Failed to import backup:', error);
+        alert('Failed to import backup. Please check the file format.');
+      }
+    };
+    
+    // Trigger file selection
+    input.click();
   };
 
   return (
@@ -57,9 +109,24 @@ export function SettingsPage() {
                   Download all data as JSON
                 </p>
               </div>
-              <Button variant="outline" onClick={exportAllData}>
+              <Button variant="outline" onClick={exportAllData} disabled={loading}>
                 <Download className="w-4 h-4 mr-2" />
-                Export
+                {loading ? 'Exporting...' : 'Export'}
+              </Button>
+            </div>
+
+            <div className="border-t border-border pt-3" />
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">Import Backup</p>
+                <p className="text-sm text-muted-foreground">
+                  Upload and restore backup file
+                </p>
+              </div>
+              <Button variant="outline" onClick={importBackup}>
+                <Upload className="w-4 h-4 mr-2" />
+                Import
               </Button>
             </div>
 

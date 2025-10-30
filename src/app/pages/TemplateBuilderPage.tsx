@@ -26,7 +26,8 @@ export function PageSpinner() {
 import { SectionBuilder } from '@app/components/template/SectionBuilder';
 import { FieldPropertyEditor } from '@app/components/template/FieldPropertyEditor';
 import { TemplatePreview } from '@app/components/template/TemplatePreview';
-import { Save, ArrowLeft, Eye, EyeOff, Plus } from 'lucide-react';
+import { TemplatePreviewModal } from '@app/components/template/TemplatePreviewModal';
+import { Save, ArrowLeft, Eye, EyeOff, Plus, Maximize2 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 export function TemplateBuilderPage() {
@@ -38,6 +39,7 @@ export function TemplateBuilderPage() {
 
   const [template, setTemplate] = useState<Template | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedField, setSelectedField] = useState<{ sectionId: string; field: Field } | null>(null);
 
   // Load template for editing
@@ -67,13 +69,35 @@ export function TemplateBuilderPage() {
   // Update template name
   const updateName = (name: string) => {
     if (!template) return;
-    setTemplate({ ...template, name });
+    const updated = new Template(
+      template.id,
+      name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Update template description
   const updateDescription = (description: string) => {
     if (!template) return;
-    setTemplate({ ...template, description });
+    const updated = new Template(
+      template.id,
+      template.name,
+      description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Add new section
@@ -88,7 +112,19 @@ export function TemplateBuilderPage() {
     };
 
     template.addSection(newSection);
-    setTemplate({ ...template });
+    // Trigger re-render by creating a new instance
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Update section
@@ -103,20 +139,55 @@ export function TemplateBuilderPage() {
       ...updates,
     };
 
-    setTemplate({ ...template });
+    // Trigger re-render by creating a new instance
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Remove section
   const removeSection = (sectionId: string) => {
     if (!template) return;
     template.removeSection(sectionId);
-    setTemplate({ ...template });
+    // Trigger re-render by creating a new instance
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Reorder sections
   const reorderSections = (sections: Section[]) => {
     if (!template) return;
-    setTemplate({ ...template, sections });
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Add field to section
@@ -135,7 +206,19 @@ export function TemplateBuilderPage() {
     };
 
     section.fields.push(newField);
-    setTemplate({ ...template });
+    // Trigger re-render by creating a new instance
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Update field
@@ -153,7 +236,19 @@ export function TemplateBuilderPage() {
       ...updates,
     };
 
-    setTemplate({ ...template });
+    // Trigger re-render by creating a new instance
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Remove field
@@ -164,7 +259,19 @@ export function TemplateBuilderPage() {
     if (!section) return;
 
     section.fields = section.fields.filter((f) => f.id !== fieldId);
-    setTemplate({ ...template });
+    // Trigger re-render by creating a new instance
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Reorder fields in section
@@ -175,7 +282,19 @@ export function TemplateBuilderPage() {
     if (!section) return;
 
     section.fields = fields;
-    setTemplate({ ...template });
+    // Trigger re-render by creating a new instance
+    const updated = new Template(
+      template.id,
+      template.name,
+      template.description,
+      template.version,
+      template.isDefault,
+      template.sections,
+      template.createdAt,
+      template.updatedAt,
+      template.author
+    );
+    setTemplate(updated);
   };
 
   // Save template
@@ -219,13 +338,17 @@ export function TemplateBuilderPage() {
         </div>
 
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowPreviewModal(true)}>
+            <Maximize2 className="w-4 h-4 mr-2" />
+            Preview Completo
+          </Button>
           <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
             {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-            {showPreview ? 'Hide' : 'Preview'}
+            {showPreview ? 'Ocultar' : 'Preview'}
           </Button>
           <Button onClick={handleSave}>
             <Save className="w-4 h-4 mr-2" />
-            Save
+            Salvar
           </Button>
         </div>
       </div>
@@ -306,6 +429,13 @@ export function TemplateBuilderPage() {
           )}
         </div>
       </div>
+
+      {/* Full-screen Preview Modal */}
+      <TemplatePreviewModal 
+        template={template} 
+        open={showPreviewModal} 
+        onOpenChange={setShowPreviewModal} 
+      />
     </div>
   );
 }

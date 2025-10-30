@@ -95,6 +95,18 @@ export interface ITicketService {
   archiveTicket(id: string): Promise<Ticket>;
 
   /**
+   * Update ticket status
+   * 
+   * Generic method to update ticket status to any value.
+   * 
+   * @param id - Ticket ID
+   * @param status - New status
+   * @returns Updated ticket
+   * @throws TicketNotFoundException if ticket not found
+   */
+  updateTicketStatus(id: string, status: TicketStatus): Promise<Ticket>;
+
+  /**
    * Count tickets with optional filtering
    * 
    * Essential for pagination metadata.

@@ -21,6 +21,7 @@ interface UseExportResult {
     todayTickets: Ticket[],
     blockers: string[]
   ) => Promise<string>;
+  exportDatabaseAsJSON: () => Promise<string>;
   downloadAsFile: (content: string, filename: string) => void;
   loading: boolean;
   error: Error | null;
@@ -121,6 +122,26 @@ export function useExport(): UseExportResult {
   };
 
   /**
+   * Export entire database as JSON backup
+   */
+  const exportDatabaseAsJSON = async (): Promise<string> => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const service = await createExportService();
+      const json = await service.exportDatabaseAsJSON();
+
+      return json;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
    * Download content as file
    * Helper function to trigger browser download
    */
@@ -141,6 +162,7 @@ export function useExport(): UseExportResult {
     exportTicketToJSON,
     exportTicketsToMarkdown,
     generateDailyStandup,
+    exportDatabaseAsJSON,
     downloadAsFile,
     loading,
     error,

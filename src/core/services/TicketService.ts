@@ -115,6 +115,25 @@ export class TicketService implements ITicketService {
     return await this.repository.save(ticket);
   }
 
+  async updateTicketStatus(id: string, status: TicketStatus): Promise<Ticket> {
+    // Get ticket
+    const ticket = await this.getTicket(id);
+
+    // Update status directly
+    ticket.status = status;
+    
+    // If marked as completed, set completedAt
+    if (status === TicketStatus.COMPLETED && !ticket.completedAt) {
+      ticket.completedAt = new Date();
+    }
+    
+    // Update timestamp
+    ticket.updatedAt = new Date();
+
+    // Save
+    return await this.repository.save(ticket);
+  }
+
   async countTickets(filter?: TicketFilter): Promise<number> {
     // Simple delegation
     return await this.repository.count(filter);

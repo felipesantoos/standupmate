@@ -137,12 +137,19 @@ export function useTemplates(autoLoad: boolean = true): UseTemplatesResult {
       const service = await createTemplateService();
       const updated = await service.setAsDefault(id);
       
-      // Update all templates (unset others)
+      // Update all templates (unset others) - maintain Template instances
       setTemplates(prev =>
-        prev.map(t => ({
-          ...t,
-          isDefault: t.id === id,
-        }))
+        prev.map(t => new Template(
+          t.id,
+          t.name,
+          t.description,
+          t.version,
+          t.id === id, // isDefault
+          t.sections,
+          t.createdAt,
+          t.updatedAt,
+          t.author
+        ))
       );
       
       setDefaultTemplate(updated);

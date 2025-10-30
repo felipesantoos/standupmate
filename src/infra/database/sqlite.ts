@@ -16,6 +16,7 @@ export interface Database {
   queryOne<T = any>(sql: string, params?: any[]): Promise<T | null>;
   execute(sql: string, params?: any[]): Promise<{ rowsAffected: number; lastInsertId?: number; changes?: number }>;
   close(): Promise<void>;
+  exportDatabase?: () => Promise<Uint8Array>;
 }
 
 /**
@@ -261,6 +262,22 @@ class SQLiteDatabase implements Database {
     await this.close();
     await this.initialize();
   }
+
+  /**
+   * Export database as Uint8Array
+   * Allows external layers to access database binary for backup purposes
+   */
+  async exportDatabase(): Promise<Uint8Array> {
+    if (!this.db) {
+      await this.initialize();
+    }
+    
+    if (!this.db) {
+      throw new Error('Database not initialized');
+    }
+    
+    return this.db.export();
+  }
 }
 
 /**
@@ -299,4 +316,15 @@ export async function resetDatabase(): Promise<void> {
     dbInstance = new SQLiteDatabase();
     await dbInstance.clear();
   }
+}
+
+/**
+ * Export database as Uint8Array (for backup purposes)
+ */
+export async function exportDatabaseBinary(): Promise<Uint8Array> {
+  if (!dbInstance) {
+    dbInstance = new SQLiteDatabase();
+    await dbInstance.initialize();
+  }
+  return dbInstance.exportDatabase();
 }

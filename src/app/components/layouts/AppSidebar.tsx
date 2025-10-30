@@ -56,8 +56,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Ticket className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Ticket Tracker</span>
-                <span className="truncate text-xs text-muted-foreground">Work Management</span>
+                <span className="truncate font-semibold">StandupMate</span>
+                <span className="truncate text-xs text-muted-foreground">Daily Standup Assistant</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

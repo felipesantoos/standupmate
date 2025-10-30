@@ -61,6 +61,7 @@ interface TicketListProps {
   emptyMessage?: string;
   selectedTickets?: string[];
   onSelectionChange?: (selected: string[]) => void;
+  onStatusChange?: (ticketId: string, status: any) => Promise<void>;
 }
 
 export function TicketList({ 
@@ -69,6 +70,7 @@ export function TicketList({
   emptyMessage = 'Nenhum ticket encontrado',
   selectedTickets = [],
   onSelectionChange,
+  onStatusChange,
 }: TicketListProps) {
   const toggleSelection = (ticketId: string) => {
     if (!onSelectionChange) return;
@@ -147,7 +149,10 @@ export function TicketList({
               />
             )}
             <div className="flex-1">
-              <TicketCard ticket={ticket} />
+              <TicketCard 
+                ticket={ticket} 
+                onStatusChange={onStatusChange ? (status) => onStatusChange(ticket.id, status) : undefined}
+              />
             </div>
           </div>
         ))}

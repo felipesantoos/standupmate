@@ -28,7 +28,7 @@ function PageSpinner() {
     </div>
   );
 }
-import { Save, ArrowLeft, Undo, Redo, History, PlayCircle, CheckCircle, Download, FileEdit, Archive } from 'lucide-react';
+import { Save, ArrowLeft, Undo, Redo, History, PlayCircle, CheckCircle, Download, FileEdit, Archive, Copy } from 'lucide-react';
 import { TicketHistoryTimeline } from '@app/components/ticket/TicketHistoryTimeline';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
@@ -347,6 +347,19 @@ export function TicketEditPage() {
     }
   };
 
+  // Copy Markdown to Clipboard
+  const handleCopyMarkdown = async () => {
+    if (!ticket || !template) return;
+
+    try {
+      const markdown = await exportTicketToMarkdown(ticket, template);
+      await navigator.clipboard.writeText(markdown);
+      toast.success('Markdown copied to clipboard.');
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  };
+
   // Keyboard shortcuts (after functions are defined)
   useKeyboardShortcuts([
     { ...SHORTCUTS.SAVE, action: handleSave },
@@ -465,6 +478,15 @@ export function TicketEditPage() {
               >
                 <History className="w-4 h-4 mr-2" />
                 History
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleCopyMarkdown}
+                className="transition-colors"
+              >
+                <Copy className="w-4 h-4 mr-2" />
+                Copy MD
               </Button>
               <Button 
                 variant="outline" 

@@ -1,4 +1,4 @@
-# 🚀 Próximos Passos - Ticket Tracker
+# 🚀 Próximos Passos - StandupMate
 
 ## 📍 Você Está Aqui
 
@@ -47,7 +47,7 @@ export class SQLiteDatabase implements Database {
     });
     
     // Criar ou carregar database
-    const data = localStorage.getItem('ticketTracker.db');
+    const data = localStorage.getItem('standupmate.db');
     this.db = data
       ? new SQL.Database(Uint8Array.from(atob(data), c => c.charCodeAt(0)))
       : new SQL.Database();

@@ -9,6 +9,7 @@ import { Ticket } from '@core/domain/Ticket';
 import { Template } from '@core/domain/Template';
 import { IExportService } from '@core/interfaces/primary/IExportService';
 import { FieldType } from '@core/domain/types';
+import { exportDatabaseBinary } from '@infra/database/sqlite';
 
 export class ExportService implements IExportService {
   exportTicketToMarkdown(ticket: Ticket, template: Template): string {
@@ -234,6 +235,50 @@ export class ExportService implements IExportService {
     
     const date = ticket.createdAt.toISOString().split('T')[0];
     return `${date}-${sanitized}.md`;
+  }
+
+  /**
+   * Export entire database as JSON backup
+   * Includes database binary, metadata, and localStorage data
+   */
+  async exportDatabaseAsJSON(): Promise<string> {
+    try {
+      // Export database binary
+      const dbBinary = await exportDatabaseBinary();
+      const dbBase64 = this.uint8ArrayToBase64(dbBinary);
+
+      // Retrieve localStorage metadata
+      const tagColors = localStorage.getItem('tag-colors');
+      const filterPresets = localStorage.getItem('filter-presets');
+
+      // Build complete backup object
+      const backup = {
+        version: '1.0.0',
+        exportedAt: new Date().toISOString(),
+        database: dbBase64,
+        metadata: {
+          tagColors: tagColors ? JSON.parse(tagColors) : null,
+          filterPresets: filterPresets ? JSON.parse(filterPresets) : null,
+        },
+      };
+
+      return JSON.stringify(backup, null, 2);
+    } catch (error) {
+      console.error('Failed to export database:', error);
+      throw new Error('Failed to export database: ' + (error as Error).message);
+    }
+  }
+
+  /**
+   * Private helper: Convert Uint8Array to base64 string
+   */
+  private uint8ArrayToBase64(bytes: Uint8Array): string {
+    let binary = '';
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   }
 }
 

@@ -17,6 +17,7 @@ interface UseTicketsResult {
   error: Error | null;
   createTicket: (ticket: Ticket) => Promise<Ticket>;
   updateTicket: (id: string, ticket: Ticket) => Promise<Ticket>;
+  updateTicketStatus: (id: string, status: TicketStatus) => Promise<Ticket>;
   deleteTicket: (id: string) => Promise<void>;
   markAsCompleted: (id: string) => Promise<Ticket>;
   markAsInProgress: (id: string) => Promise<Ticket>;
@@ -144,6 +145,25 @@ export function useTickets(
   };
 
   /**
+   * Update ticket status (generic method)
+   */
+  const updateTicketStatus = async (id: string, status: TicketStatus): Promise<Ticket> => {
+    try {
+      setError(null);
+      const service = await createTicketService();
+      const updated = await service.updateTicketStatus(id, status);
+      
+      // Update in local state
+      setTickets(prev => prev.map(t => (t.id === id ? updated : t)));
+      
+      return updated;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  };
+
+  /**
    * Mark ticket as in progress
    */
   const markAsInProgress = async (id: string): Promise<Ticket> => {
@@ -201,6 +221,7 @@ export function useTickets(
     error,
     createTicket,
     updateTicket,
+    updateTicketStatus,
     deleteTicket,
     markAsCompleted,
     markAsInProgress,

@@ -1,7 +1,7 @@
 {
-  "name": "ticket-tracker",
+  "name": "standupmate",
   "version": "0.1.0",
-  "description": "Sistema de tracking de trabalho com arquitetura hexagonal",
+  "description": "Your Daily Standup Assistant - Sistema de tracking de trabalho com arquitetura hexagonal",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,6 +15,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-react": "^11.0.0",
     "@dnd-kit/core": "^6.1.0",
     "@dnd-kit/modifiers": "^7.0.0",
     "@dnd-kit/sortable": "^8.0.0",
@@ -37,11 +39,13 @@
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tanstack/react-query": "^5.14.2",
+    "@types/marked": "^5.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.0.0",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.294.0",
+    "marked": "^16.4.1",
     "next-themes": "^0.4.6",
     "react": "^18.2.0",
     "react-day-picker": "^9.11.1",

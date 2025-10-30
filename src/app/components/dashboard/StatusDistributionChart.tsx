@@ -16,10 +16,10 @@ interface StatusDistributionChartProps {
 
 // Colors for different statuses
 const STATUS_COLORS: Record<string, string> = {
-  'Rascunho': 'hsl(var(--muted-foreground))',
-  'Em Progresso': 'hsl(var(--chart-1))',
-  'Concluído': 'hsl(var(--chart-2))',
-  'Arquivado': 'hsl(var(--muted))',
+  'Draft': 'hsl(var(--muted-foreground))',
+  'In Progress': 'hsl(var(--chart-1))',
+  'Completed': 'hsl(var(--chart-2))',
+  'Archived': 'hsl(var(--muted))',
 };
 
 export function StatusDistributionChart({ data, loading }: StatusDistributionChartProps) {
@@ -28,8 +28,8 @@ export function StatusDistributionChart({ data, loading }: StatusDistributionCha
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Distribuição por Status</CardTitle>
-          <CardDescription>Quantidade de tickets em cada status</CardDescription>
+          <CardTitle>Distribution by Status</CardTitle>
+          <CardDescription>Number of tickets in each status</CardDescription>
         </CardHeader>
         <CardContent>
           <Skeleton className="h-[250px] w-full" />
@@ -63,8 +63,8 @@ export function StatusDistributionChart({ data, loading }: StatusDistributionCha
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Distribuição por Status</CardTitle>
-        <CardDescription>Quantidade de tickets em cada status</CardDescription>
+        <CardTitle>Distribution by Status</CardTitle>
+        <CardDescription>Number of tickets in each status</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={250}>

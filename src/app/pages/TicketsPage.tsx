@@ -24,7 +24,7 @@ export function TicketsPage() {
   const [filter, setFilter] = useState<TicketFilter>(new TicketFilter());
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
   
-  const { tickets, loading, error, totalCount, deleteTicket, markAsCompleted, archiveTicket } = useTickets(filter);
+  const { tickets, loading, error, totalCount, deleteTicket, markAsCompleted, archiveTicket, updateTicketStatus } = useTickets(filter);
   const { templates } = useTemplates();
   const { exportTicketsToMarkdown, downloadAsFile } = useExport();
 
@@ -90,6 +90,27 @@ export function TicketsPage() {
     }
   };
 
+  // Handle status change inline
+  const handleStatusChange = async (ticketId: string, status: any) => {
+    try {
+      await updateTicketStatus(ticketId, status);
+    } catch (error) {
+      toast.error((error as Error).message);
+      throw error; // Re-throw to let TicketCard show the error
+    }
+  };
+
+  // Handle bulk status change
+  const handleBulkStatusChange = async (status: any) => {
+    try {
+      await Promise.all(selectedTickets.map((id) => updateTicketStatus(id, status)));
+      toast.success(`${selectedTickets.length} ticket(s) status updated.`);
+      setSelectedTickets([]);
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -134,6 +155,7 @@ export function TicketsPage() {
         }
         selectedTickets={selectedTickets}
         onSelectionChange={setSelectedTickets}
+        onStatusChange={handleStatusChange}
       />
 
       {/* Batch Actions */}
@@ -144,6 +166,7 @@ export function TicketsPage() {
         onArchive={handleBatchArchive}
         onMarkComplete={handleBatchComplete}
         onClearSelection={() => setSelectedTickets([])}
+        onStatusChange={handleBulkStatusChange}
       />
     </div>
   );

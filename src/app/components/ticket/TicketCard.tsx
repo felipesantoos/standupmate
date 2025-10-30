@@ -7,20 +7,25 @@
 import { Ticket } from '@core/domain/Ticket';
 import { TicketStatus } from '@core/domain/types';
 import { Badge } from '@app/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/components/ui/select';
 import { formatRelativeTime } from '@/utils/formatters';
-import { Clock, Calendar, User, AlertCircle } from 'lucide-react';
+import { Clock, Calendar, User, AlertCircle, FileEdit, PlayCircle, CheckCircle, Archive as ArchiveIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getTagColor } from './TagColorPicker';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface TicketCardProps {
   ticket: Ticket;
   onClick?: () => void;
+  onStatusChange?: (status: TicketStatus) => Promise<void>;
 }
 
-export function TicketCard({ ticket, onClick }: TicketCardProps) {
+export function TicketCard({ ticket, onClick, onStatusChange }: TicketCardProps) {
   const title = ticket.data['title'] || 'Untitled Ticket';
   const description = ticket.data['description'] || '';
   const hasPriority = ticket.metadata.priority;
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Status badge variant (black & white + semantic green)
   const getStatusVariant = (status: TicketStatus): 'default' | 'secondary' | 'outline' => {
@@ -40,6 +45,21 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
         return 'Completed';
       case TicketStatus.ARCHIVED:
         return 'Archived';
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!onStatusChange) return;
+    
+    setIsUpdating(true);
+    try {
+      await onStatusChange(newStatus as TicketStatus);
+      toast.success('Status atualizado com sucesso');
+    } catch (error) {
+      toast.error('Erro ao atualizar status');
+      console.error(error);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -63,17 +83,57 @@ export function TicketCard({ ticket, onClick }: TicketCardProps) {
               )}
             </div>
             
-            {/* Status Badge */}
-            <Badge 
-              variant={statusVariant}
-              className={`shrink-0 ${
-                ticket.status === TicketStatus.COMPLETED 
-                  ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50' 
-                  : ''
-              }`}
-            >
-              {statusText}
-            </Badge>
+            {/* Status Dropdown or Badge */}
+            {onStatusChange ? (
+              <div className="shrink-0" onClick={(e) => e.preventDefault()}>
+                <Select 
+                  value={ticket.status} 
+                  onValueChange={handleStatusChange}
+                  disabled={isUpdating}
+                >
+                  <SelectTrigger className="h-7 w-[130px] text-xs">
+                    <SelectValue placeholder={statusText} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={TicketStatus.DRAFT}>
+                      <div className="flex items-center gap-2">
+                        <FileEdit className="w-3 h-3" />
+                        <span>Draft</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value={TicketStatus.IN_PROGRESS}>
+                      <div className="flex items-center gap-2">
+                        <PlayCircle className="w-3 h-3" />
+                        <span>In Progress</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value={TicketStatus.COMPLETED}>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>Completed</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value={TicketStatus.ARCHIVED}>
+                      <div className="flex items-center gap-2">
+                        <ArchiveIcon className="w-3 h-3" />
+                        <span>Archived</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <Badge 
+                variant={statusVariant}
+                className={`shrink-0 ${
+                  ticket.status === TicketStatus.COMPLETED 
+                    ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-50' 
+                    : ''
+                }`}
+              >
+                {statusText}
+              </Badge>
+            )}
           </div>
 
           {/* Tags & Priority Row */}

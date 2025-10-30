@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@app/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@app/components/ui/radio-group';
 import { Label } from '@app/components/ui/label';
+import { MarkdownEditor } from '@app/components/ui/markdown-editor';
 import { useState, useEffect } from 'react';
 
 interface DynamicFieldProps {
@@ -144,13 +145,13 @@ export function DynamicField({ field, value, onChange, error }: DynamicFieldProp
 
       case FieldType.MARKDOWN:
         return (
-          <Textarea
+          <MarkdownEditor
             value={localValue || ''}
-            onChange={(e) => handleChange(e.target.value)}
-            placeholder={field.placeholder || 'Markdown suportado...'}
+            onChange={handleChange}
+            placeholder={field.placeholder || 'Escreva seu conteúdo...'}
             required={field.required}
-            rows={8}
-            className="font-mono"
+            minLength={field.validation?.minLength}
+            maxLength={field.validation?.maxLength}
           />
         );
 

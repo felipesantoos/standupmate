@@ -1757,8 +1757,8 @@ Para cada entidade (Ticket, Template), seguir este checklist baseado nos seus gu
 ### 2. Setup Inicial (Dia 1-2)
 ```bash
 # 1. Criar repositório
-git init ticket-tracker
-cd ticket-tracker
+git init standupmate
+cd standupmate
 
 # 2. Criar projeto Tauri
 npm create tauri-app@latest

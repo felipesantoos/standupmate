@@ -9,10 +9,11 @@ import { Template } from '@core/domain/Template';
 import { FieldType } from '@core/domain/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
 import { Button } from '@app/components/ui/button';
-import { Download, Check } from 'lucide-react';
+import { Download, Check, Eye } from 'lucide-react';
 import { useTemplates } from '@app/hooks/useTemplates';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
+import { TemplatePreviewModal } from './TemplatePreviewModal';
 
 const MARKETPLACE_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
   {
@@ -364,25 +365,36 @@ const MARKETPLACE_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] 
 
 export function TemplateMarketplace() {
   const [installing, setInstalling] = useState<string | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
   const { createTemplate } = useTemplates();
+
+  const createTemplateInstance = (templateData: typeof MARKETPLACE_TEMPLATES[0]): Template => {
+    const now = new Date();
+    return new Template(
+      uuidv4(),
+      templateData.name,
+      templateData.description,
+      templateData.version,
+      false,
+      templateData.sections,
+      now,
+      now,
+      templateData.author
+    );
+  };
+
+  const openPreviewModal = (templateData: typeof MARKETPLACE_TEMPLATES[0]) => {
+    const template = createTemplateInstance(templateData);
+    setPreviewTemplate(template);
+    setPreviewModalOpen(true);
+  };
 
   const installTemplate = async (templateData: typeof MARKETPLACE_TEMPLATES[0]) => {
     setInstalling(templateData.name);
     
     try {
-      const now = new Date();
-      const template = new Template(
-        uuidv4(),
-        templateData.name,
-        templateData.description,
-        templateData.version,
-        false,
-        templateData.sections,
-        now,
-        now,
-        templateData.author
-      );
-
+      const template = createTemplateInstance(templateData);
       await createTemplate(template);
       toast.success(`Template "${templateData.name}" added successfully.`);
     } catch (error) {
@@ -417,29 +429,47 @@ export function TemplateMarketplace() {
                   </p>
                 </div>
 
-                <Button
-                  onClick={() => installTemplate(template)}
-                  disabled={installing === template.name}
-                  className="w-full"
-                  variant="outline"
-                >
-                  {installing === template.name ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2" />
-                      Installing...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4 mr-2" />
-                      Install Template
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => openPreviewModal(template)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </Button>
+                  <Button
+                    onClick={() => installTemplate(template)}
+                    disabled={installing === template.name}
+                    className="flex-1"
+                  >
+                    {installing === template.name ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
+                        Installing...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" />
+                        Install
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Preview Modal */}
+      {previewTemplate && (
+        <TemplatePreviewModal 
+          template={previewTemplate} 
+          open={previewModalOpen} 
+          onOpenChange={setPreviewModalOpen} 
+        />
+      )}
     </div>
   );
 }

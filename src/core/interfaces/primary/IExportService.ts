@@ -59,5 +59,13 @@ export interface IExportService {
     todayTickets: Ticket[],
     blockers: string[]
   ): string;
+
+  /**
+   * Export entire database as JSON
+   * Includes database binary (base64), metadata, and localStorage data
+   * 
+   * @returns Promise with JSON string containing complete backup
+   */
+  exportDatabaseAsJSON(): Promise<string>;
 }
 

@@ -23,7 +23,7 @@ export function MainLayout() {
           <div className="flex items-center gap-2 px-4 flex-1">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <h2 className="text-sm font-semibold">Ticket Tracker</h2>
+            <h2 className="text-sm font-semibold">StandupMate</h2>
           </div>
         </header>
 
