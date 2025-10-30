@@ -4,7 +4,7 @@
  * Weekly and monthly reports with analytics.
  */
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTickets } from '@app/hooks/useTickets';
 import { useAnalytics } from '@app/hooks/useAnalytics';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
@@ -14,43 +14,13 @@ import { Button } from '@app/components/ui/button';
 import { ProductivityChart } from '@app/components/dashboard/ProductivityChart';
 import { TypeDistributionChart } from '@app/components/dashboard/TypeDistributionChart';
 import { StatusDistributionChart } from '@app/components/dashboard/StatusDistributionChart';
-import { Download, Calendar } from 'lucide-react';
-
-type ReportPeriod = 'week' | 'month' | 'custom';
+import { Download } from 'lucide-react';
 
 export function ReportsPage() {
-  const [period, setPeriod] = useState<ReportPeriod>('week');
-  const [customStart, setCustomStart] = useState<Date>();
-  const [customEnd, setCustomEnd] = useState<Date>();
-
-  // Calculate date range based on period
-  const getDateRange = () => {
-    const now = new Date();
-    
-    switch (period) {
-      case 'week': {
-        const start = new Date(now);
-        start.setDate(now.getDate() - 7);
-        return { start, end: now };
-      }
-      case 'month': {
-        const start = new Date(now);
-        start.setMonth(now.getMonth() - 1);
-        return { start, end: now };
-      }
-      case 'custom':
-        return { start: customStart, end: customEnd };
-      default:
-        return { start: undefined, end: undefined };
-    }
-  };
-
-  const { start, end } = getDateRange();
-  
-  // Memoize filter to prevent infinite rerenders - recreate only when period or dates change
+  // Memoize filter without date restrictions
   const filter = useMemo(
-    () => new TicketFilter(undefined, undefined, undefined, start, end),
-    [period, start?.getTime(), end?.getTime(), customStart?.getTime(), customEnd?.getTime()]
+    () => new TicketFilter(undefined, undefined, undefined, undefined, undefined),
+    []
   );
   
   const { tickets, loading, totalCount } = useTickets(filter, true);
@@ -66,9 +36,9 @@ export function ReportsPage() {
     : 0;
 
   const exportReport = () => {
-    const report = `# Report - ${period === 'week' ? 'Weekly' : 'Monthly'}
+    const report = `# Report - All Time
 
-**Period:** ${start?.toLocaleDateString('en-US')} - ${end?.toLocaleDateString('en-US')}
+**Generated:** ${new Date().toLocaleDateString('en-US')}
 
 ## 📊 Summary
 
@@ -100,7 +70,7 @@ ${timeComparison
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `relatorio-${period}-${new Date().toISOString().split('T')[0]}.md`;
+    link.download = `report-${new Date().toISOString().split('T')[0]}.md`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -129,61 +99,6 @@ ${timeComparison
             Export Report
         </Button>
       </div>
-
-      {/* Period Selector */}
-      <Card className="mb-6">
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              Period
-            </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <Button
-              variant={period === 'week' ? 'default' : 'outline'}
-              onClick={() => setPeriod('week')}
-            >
-              Last Week
-            </Button>
-            <Button
-              variant={period === 'month' ? 'default' : 'outline'}
-              onClick={() => setPeriod('month')}
-            >
-              Last Month
-            </Button>
-            <Button
-              variant={period === 'custom' ? 'default' : 'outline'}
-              onClick={() => setPeriod('custom')}
-            >
-              Custom
-            </Button>
-          </div>
-
-          {period === 'custom' && (
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={customStart?.toISOString().split('T')[0] || ''}
-                  onChange={(e) => setCustomStart(new Date(e.target.value))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">End Date</label>
-                <input
-                  type="date"
-                  value={customEnd?.toISOString().split('T')[0] || ''}
-                  onChange={(e) => setCustomEnd(new Date(e.target.value))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

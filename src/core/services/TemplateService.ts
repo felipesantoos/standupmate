@@ -54,10 +54,17 @@ export class TemplateService implements ITemplateService {
     // Business validation
     template.validate();
 
-    // Check for duplicate name
-    const existing = await this.templateRepository.findByName(template.name);
+    // Check for duplicate (name, version) combination
+    const existing = await this.templateRepository.findByNameAndVersion(
+      template.name,
+      template.version
+    );
     if (existing) {
-      throw new DuplicateException('Template', 'name', template.name);
+      throw new DuplicateException(
+        'Template',
+        'name and version',
+        `${template.name} (v${template.version})`
+      );
     }
 
     // Save
@@ -71,13 +78,29 @@ export class TemplateService implements ITemplateService {
       throw new TemplateNotFoundException(id);
     }
 
+    // Check if template has associated tickets (cannot edit if it does)
+    const hasTickets = await this.templateRepository.hasAssociatedTickets(id);
+    if (hasTickets) {
+      throw new InvalidOperationException(
+        'update template',
+        'Template has associated tickets and cannot be edited. Create a new version instead.'
+      );
+    }
+
     // Business validation
     template.validate();
 
-    // Check for duplicate name (excluding current template)
-    const duplicateName = await this.templateRepository.findByName(template.name);
-    if (duplicateName && duplicateName.id !== id) {
-      throw new DuplicateException('Template', 'name', template.name);
+    // Check for duplicate (name, version) combination (excluding current template)
+    const duplicateNameVersion = await this.templateRepository.findByNameAndVersion(
+      template.name,
+      template.version
+    );
+    if (duplicateNameVersion && duplicateNameVersion.id !== id) {
+      throw new DuplicateException(
+        'Template',
+        'name and version',
+        `${template.name} (v${template.version})`
+      );
     }
 
     // Ensure ID is set
@@ -179,6 +202,51 @@ export class TemplateService implements ITemplateService {
     };
 
     return JSON.stringify(data, null, 2);
+  }
+
+  async createNewVersion(id: string): Promise<Template> {
+    // Get original template
+    const original = await this.getTemplate(id);
+
+    // Use domain method to create new version
+    const newVersion = original.createNewVersion();
+
+    // Validate the new version
+    newVersion.validate();
+
+    // Check if this version already exists
+    const existing = await this.templateRepository.findByNameAndVersion(
+      newVersion.name,
+      newVersion.version
+    );
+    if (existing) {
+      throw new DuplicateException(
+        'Template',
+        'name and version',
+        `${newVersion.name} (v${newVersion.version})`
+      );
+    }
+
+    // Save new version
+    return await this.templateRepository.save(newVersion);
+  }
+
+  async canEditTemplate(id: string): Promise<boolean> {
+    // Check if template exists
+    const template = await this.templateRepository.findById(id);
+    if (!template) {
+      throw new TemplateNotFoundException(id);
+    }
+
+    // Check if it has associated tickets
+    const hasTickets = await this.templateRepository.hasAssociatedTickets(id);
+    
+    // Can edit only if no tickets are associated
+    return !hasTickets;
+  }
+
+  async getTemplateVersions(name: string): Promise<Template[]> {
+    return await this.templateRepository.findVersionsByName(name);
   }
 }
 

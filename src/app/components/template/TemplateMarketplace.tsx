@@ -6,16 +6,24 @@
 
 import { useState } from 'react';
 import { Template } from '@core/domain/Template';
-import { FieldType } from '@core/domain/types';
+import { FieldType, Section } from '@core/domain/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
 import { Button } from '@app/components/ui/button';
-import { Download, Check, Eye } from 'lucide-react';
-import { useTemplates } from '@app/hooks/useTemplates';
+import { Download, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import { TemplatePreviewModal } from './TemplatePreviewModal';
 
-const MARKETPLACE_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] = [
+interface MarketplaceTemplateData {
+  name: string;
+  description: string;
+  version: string;
+  isDefault: boolean;
+  author: string;
+  sections: Section[];
+}
+
+const MARKETPLACE_TEMPLATES: MarketplaceTemplateData[] = [
   {
     name: 'Bug Report',
     description: 'Template para reportar e trackear bugs',
@@ -363,13 +371,16 @@ const MARKETPLACE_TEMPLATES: Omit<Template, 'id' | 'createdAt' | 'updatedAt'>[] 
   },
 ];
 
-export function TemplateMarketplace() {
+interface TemplateMarketplaceProps {
+  onTemplateCreated: (template: Template) => Promise<Template>;
+}
+
+export function TemplateMarketplace({ onTemplateCreated }: TemplateMarketplaceProps) {
   const [installing, setInstalling] = useState<string | null>(null);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
-  const { createTemplate } = useTemplates();
 
-  const createTemplateInstance = (templateData: typeof MARKETPLACE_TEMPLATES[0]): Template => {
+  const createTemplateInstance = (templateData: MarketplaceTemplateData): Template => {
     const now = new Date();
     return new Template(
       uuidv4(),
@@ -384,18 +395,18 @@ export function TemplateMarketplace() {
     );
   };
 
-  const openPreviewModal = (templateData: typeof MARKETPLACE_TEMPLATES[0]) => {
+  const openPreviewModal = (templateData: MarketplaceTemplateData) => {
     const template = createTemplateInstance(templateData);
     setPreviewTemplate(template);
     setPreviewModalOpen(true);
   };
 
-  const installTemplate = async (templateData: typeof MARKETPLACE_TEMPLATES[0]) => {
+  const installTemplate = async (templateData: MarketplaceTemplateData) => {
     setInstalling(templateData.name);
     
     try {
       const template = createTemplateInstance(templateData);
-      await createTemplate(template);
+      await onTemplateCreated(template);
       toast.success(`Template "${templateData.name}" added successfully.`);
     } catch (error) {
       toast.error((error as Error).message);

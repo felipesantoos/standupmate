@@ -68,8 +68,8 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'description',
             label: 'Ticket Description',
-            type: FieldType.TEXTAREA,
-            required: true,
+            type: FieldType.MARKDOWN,
+            required: false,
             placeholder: 'What needs to be done and why is it important?',
             order: 2,
             validation: {
@@ -80,7 +80,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
             id: 'ticket_type',
             label: 'Ticket Type',
             type: FieldType.SELECT,
-            required: true,
+            required: false,
             order: 3,
             options: ['Feature/Implementation', 'Bug', 'Investigation', 'Documentation', 'Tech Debt'],
           },
@@ -88,7 +88,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
             id: 'priority',
             label: 'Priority',
             type: FieldType.SELECT,
-            required: true,
+            required: false,
             order: 4,
             options: ['🔴 P0 Critical', '🟠 P1 High', '🟡 P2 Medium', '🟢 P3 Low'],
           },
@@ -102,15 +102,15 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'acceptance_criteria',
             label: 'Acceptance Criteria',
-            type: FieldType.TEXTAREA,
-            required: true,
+            type: FieldType.MARKDOWN,
+            required: false,
             placeholder: '- Criterion 1\n- Criterion 2\n- Criterion 3',
             order: 0,
           },
           {
             id: 'done_checklist',
             label: 'Done When',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- Code implemented and tested\n- Code review approved\n- Merged and deployed',
             order: 1,
@@ -125,7 +125,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'blockers',
             label: 'Blockers and Dependencies',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'People, access, technical dependencies, knowledge gaps...',
             order: 0,
@@ -133,7 +133,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'preparation_checklist',
             label: 'Preparation Checklist',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- Branch created\n- Environment running\n- Code explored\n- Documentation read',
             order: 1,
@@ -142,7 +142,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
             id: 'complexity',
             label: 'Complexity Estimate',
             type: FieldType.RADIO,
-            required: true,
+            required: false,
             order: 2,
             options: ['🟢 Simple', '🟡 Medium', '🟠 High', '🔴 Very High'],
           },
@@ -156,7 +156,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'initial_plan',
             label: 'Initial Approach (Your Thoughts)',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '1. Step one\n2. Step two\n3. Step three',
             order: 0,
@@ -164,7 +164,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'ai_suggestion',
             label: 'AI Suggested Plan',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What did the AI suggest?',
             order: 1,
@@ -172,8 +172,8 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'final_plan',
             label: 'Final Consolidated Plan',
-            type: FieldType.TEXTAREA,
-            required: true,
+            type: FieldType.MARKDOWN,
+            required: false,
             placeholder: '- Step 1 (15min): ...\n- Step 2 (30min): ...\n- Step 3 (20min): ...',
             order: 2,
           },
@@ -181,14 +181,14 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
             id: 'time_estimate',
             label: 'Time Estimate',
             type: FieldType.TEXT,
-            required: true,
+            required: false,
             placeholder: '2h 30min',
             order: 3,
           },
           {
             id: 'checkpoint',
             label: 'Intermediate Checkpoint',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What should be ready halfway through?',
             order: 4,
@@ -196,7 +196,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'plan_b',
             label: 'Plan B (Alternative Approach)',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What if things go wrong? When to escalate?',
             order: 5,
@@ -227,7 +227,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'step_progress',
             label: 'Step Progress',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- Step 1 - Start: 10:30 | End: 10:45\n- Step 2 - Start: 10:45 | End: 11:30',
             order: 2,
@@ -235,7 +235,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'problems_encountered',
             label: '🔥 Problems/Surprises',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'Unexpected issues or challenges...',
             order: 3,
@@ -243,7 +243,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'plan_changes',
             label: '🔄 Changes to Plan',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'How did the plan evolve during execution?',
             order: 4,
@@ -251,7 +251,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'learnings',
             label: '💡 Learnings and Insights',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What did you learn while working?',
             order: 5,
@@ -259,7 +259,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'quick_wins',
             label: '⚡ Quick Wins',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'Good things that happened...',
             order: 6,
@@ -274,7 +274,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'code_quality',
             label: '🧹 Code Quality Checklist',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- Linter passed\n- No console.logs\n- Descriptive names\n- Error handling',
             order: 0,
@@ -282,7 +282,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'testing',
             label: '🧪 Testing Checklist',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- Unit tests\n- Manual testing\n- Edge cases\n- Real data',
             order: 1,
@@ -290,7 +290,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'impact',
             label: '🌍 Impact and Performance',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- Files affected\n- Performance verified\n- No regressions',
             order: 2,
@@ -298,7 +298,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'documentation',
             label: '📚 Documentation',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- README updated\n- Comments added\n- Examples provided',
             order: 3,
@@ -306,7 +306,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'git_deploy',
             label: '🔀 Git and Deploy',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: '- Commits clear\n- Branch synced\n- PR created\n- Reviewers assigned',
             order: 4,
@@ -321,7 +321,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'yesterday',
             label: 'Yesterday',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What did you accomplish?',
             order: 0,
@@ -329,7 +329,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'today',
             label: 'Today',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What are you working on?',
             order: 1,
@@ -337,7 +337,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'next_steps',
             label: 'Next Steps',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What comes next?',
             order: 2,
@@ -345,7 +345,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'daily_blockers',
             label: 'Blockers',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'Any blockers or help needed?',
             order: 3,
@@ -384,7 +384,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'summary',
             label: 'Summary of Implementation',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'Brief summary of what was done...',
             order: 3,
@@ -392,7 +392,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'what_worked',
             label: 'What Worked Well?',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'Positive aspects...',
             order: 4,
@@ -400,7 +400,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'what_could_improve',
             label: 'What Could Have Been Better?',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'Areas for improvement...',
             order: 5,
@@ -424,7 +424,7 @@ export async function seedDefaultTemplate(db: Database): Promise<Template> {
           {
             id: 'process_improvements',
             label: 'Process Improvements for Next Time',
-            type: FieldType.TEXTAREA,
+            type: FieldType.MARKDOWN,
             required: false,
             placeholder: 'What to do differently next time...',
             order: 8,

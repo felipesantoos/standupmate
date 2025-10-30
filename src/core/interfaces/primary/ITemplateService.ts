@@ -103,5 +103,36 @@ export interface ITemplateService {
    * @throws TemplateNotFoundException if not found
    */
   exportToJSON(id: string): Promise<string>;
+
+  /**
+   * Create new version of template
+   * 
+   * Increments major version and creates a new template instance
+   * with the same name but different version.
+   * 
+   * @param id - Template ID to create new version from
+   * @returns New template with incremented version
+   * @throws TemplateNotFoundException if not found
+   */
+  createNewVersion(id: string): Promise<Template>;
+
+  /**
+   * Check if template can be edited
+   * 
+   * Templates with associated tickets cannot be edited.
+   * 
+   * @param id - Template ID
+   * @returns true if template can be edited (no tickets), false otherwise
+   * @throws TemplateNotFoundException if not found
+   */
+  canEditTemplate(id: string): Promise<boolean>;
+
+  /**
+   * Get all versions of a template by name
+   * 
+   * @param name - Template name
+   * @returns List of all versions sorted by version (descending)
+   */
+  getTemplateVersions(name: string): Promise<Template[]>;
 }
 

@@ -20,6 +20,7 @@ import { Spinner } from '@app/components/ui/spinner';
 import { Separator } from '@app/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/components/ui/select';
+import { Badge } from '@app/components/ui/badge';
 
 function PageSpinner() {
   return (
@@ -243,6 +244,14 @@ export function TicketEditPage() {
     const oldStatus = ticket.status;
     const status = newStatus as TicketStatus;
 
+    // Validate required fields only when trying to mark as completed
+    if (status === TicketStatus.COMPLETED) {
+      if (!validate()) {
+        toast.error('Não é possível concluir o ticket. Por favor, preencha todos os campos obrigatórios.');
+        return; // Prevent status change
+      }
+    }
+
     const updatedTicket = new Ticket(
       ticket.id,
       ticket.templateId,
@@ -310,11 +319,8 @@ export function TicketEditPage() {
 
   // Save ticket
   const handleSave = async () => {
-    if (!validate()) {
-      toast.warning('Please fix errors before saving.');
-      return;
-    }
-
+    // Allow saving even with validation errors
+    // Validation is only enforced when marking as completed
     try {
       if (isNew && ticket) {
         await createTicket(ticket);
@@ -521,7 +527,17 @@ export function TicketEditPage() {
               <SelectContent>
                 {templates.map((t) => (
                   <SelectItem key={t.id} value={t.id} className="cursor-pointer">
-                    {t.name} {t.isDefault ? '(Default)' : ''}
+                    <div className="flex items-center gap-2">
+                      <span>{t.name}</span>
+                      <Badge variant="outline" className="text-xs">
+                        v{t.version}
+                      </Badge>
+                      {t.isDefault && (
+                        <Badge variant="secondary" className="text-xs">
+                          Default
+                        </Badge>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

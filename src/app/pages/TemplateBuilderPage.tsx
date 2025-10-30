@@ -27,20 +27,23 @@ import { SectionBuilder } from '@app/components/template/SectionBuilder';
 import { FieldPropertyEditor } from '@app/components/template/FieldPropertyEditor';
 import { TemplatePreview } from '@app/components/template/TemplatePreview';
 import { TemplatePreviewModal } from '@app/components/template/TemplatePreviewModal';
-import { Save, ArrowLeft, Eye, EyeOff, Plus, Maximize2 } from 'lucide-react';
+import { Save, ArrowLeft, Eye, EyeOff, Plus, Maximize2, GitBranch, Lock } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { Alert, AlertDescription, AlertTitle } from '@app/components/ui/alert';
 
 export function TemplateBuilderPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isNew = id === 'new';
 
-  const { templates, createTemplate, updateTemplate } = useTemplates();
+  const { templates, createTemplate, updateTemplate, canEdit, createNewVersion } = useTemplates();
 
   const [template, setTemplate] = useState<Template | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedField, setSelectedField] = useState<{ sectionId: string; field: Field } | null>(null);
+  const [canEditTemplate, setCanEditTemplate] = useState<boolean>(true);
+  const [checkingEditPermission, setCheckingEditPermission] = useState<boolean>(false);
 
   // Load template for editing
   useEffect(() => {
@@ -57,14 +60,32 @@ export function TemplateBuilderPage() {
         new Date()
       );
       setTemplate(newTemplate);
+      setCanEditTemplate(true);
     } else {
       // Load existing template
       const existing = templates.find((t) => t.id === id);
-      if (existing) {
+      if (existing && id) {
         setTemplate(existing);
+        
+        // Check if template can be edited
+        checkEditPermission(id);
       }
     }
   }, [id, isNew, templates]);
+
+  // Check edit permission for existing template
+  const checkEditPermission = async (templateId: string) => {
+    try {
+      setCheckingEditPermission(true);
+      const canEditResult = await canEdit(templateId);
+      setCanEditTemplate(canEditResult);
+    } catch (error) {
+      console.error('Error checking edit permission:', error);
+      setCanEditTemplate(false);
+    } finally {
+      setCheckingEditPermission(false);
+    }
+  };
 
   // Update template name
   const updateName = (name: string) => {
@@ -318,6 +339,19 @@ export function TemplateBuilderPage() {
     }
   };
 
+  // Create new version of template
+  const handleCreateNewVersion = async () => {
+    if (!template) return;
+
+    try {
+      const newVersion = await createNewVersion(template.id);
+      toast.success(`New version ${newVersion.version} created successfully.`);
+      navigate(`/templates/builder/${newVersion.id}`);
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
+  };
+
   if (!template) {
     return <PageSpinner />;
   }
@@ -346,12 +380,31 @@ export function TemplateBuilderPage() {
             {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
             {showPreview ? 'Ocultar' : 'Preview'}
           </Button>
-          <Button onClick={handleSave}>
-            <Save className="w-4 h-4 mr-2" />
-            Salvar
-          </Button>
+          {!isNew && !canEditTemplate ? (
+            <Button onClick={handleCreateNewVersion}>
+              <GitBranch className="w-4 h-4 mr-2" />
+              Criar Nova Versão
+            </Button>
+          ) : (
+            <Button onClick={handleSave}>
+              <Save className="w-4 h-4 mr-2" />
+              Salvar
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* Alert for locked templates */}
+      {!isNew && !canEditTemplate && !checkingEditPermission && (
+        <Alert className="mb-6">
+          <Lock className="h-4 w-4" />
+          <AlertTitle>Template bloqueado para edição</AlertTitle>
+          <AlertDescription>
+            Este template possui registros cadastrados e não pode ser editado diretamente.
+            Para fazer alterações, crie uma nova versão do template.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Panel - Template Editor */}
@@ -368,6 +421,7 @@ export function TemplateBuilderPage() {
                   value={template.name}
                   onChange={(e) => updateName(e.target.value)}
                   placeholder="e.g. Daily Work Ticket"
+                  disabled={!canEditTemplate && !isNew}
                 />
               </div>
               <div>
@@ -376,7 +430,12 @@ export function TemplateBuilderPage() {
                   value={template.description}
                   onChange={(e) => updateDescription(e.target.value)}
                   placeholder="Describe the purpose of this template..."
+                  disabled={!canEditTemplate && !isNew}
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Version</label>
+                <Input value={template.version} disabled />
               </div>
             </CardContent>
           </Card>
@@ -386,7 +445,11 @@ export function TemplateBuilderPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Sections and Fields</CardTitle>
-                <Button size="sm" onClick={addSection}>
+                <Button 
+                  size="sm" 
+                  onClick={addSection}
+                  disabled={!canEditTemplate && !isNew}
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   New Section
                 </Button>

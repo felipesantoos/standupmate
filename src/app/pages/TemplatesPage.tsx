@@ -5,7 +5,7 @@
  * Connected with useTemplates hook.
  */
 
-import { Plus, Star, Copy, Download, Trash2, Edit, Upload, Layout, Store, MoreVertical, Search, AlertCircle, Eye } from 'lucide-react';
+import { Plus, Star, Copy, Download, Trash2, Edit, Upload, Layout, Store, MoreVertical, Search, Eye, GitBranch } from 'lucide-react';
 import { useState } from 'react';
 import { useTemplates } from '@app/hooks/useTemplates';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
@@ -23,7 +23,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@app/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@app/components/ui/dialog';
 import { Label } from '@app/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@app/components/ui/alert';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/components/ui/tooltip';
 
 interface EmptyStateProps {
@@ -80,11 +79,12 @@ export function TemplatesPage() {
   const { 
     templates, 
     loading, 
-    error,
     setAsDefault,
     duplicateTemplate,
     deleteTemplate,
     exportToJSON,
+    createNewVersion,
+    createTemplate,
   } = useTemplates();
 
   // Filtrar templates baseado na busca
@@ -116,6 +116,17 @@ export function TemplatesPage() {
       toast.success('Template duplicated successfully.');
       setDuplicateDialogOpen(false);
       setDuplicateName('');
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
+
+  const handleCreateNewVersion = async (id: string, name: string) => {
+    try {
+      const newVersion = await createNewVersion(id);
+      toast.success(`New version ${newVersion.version} of "${name}" created successfully.`);
+      // Redirect to edit the new version
+      window.location.href = `/templates/builder/${newVersion.id}`;
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -184,15 +195,6 @@ export function TemplatesPage() {
             </Button>
           </div>
         </div>
-
-        {/* Error State */}
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error loading templates</AlertTitle>
-            <AlertDescription>{error.message}</AlertDescription>
-          </Alert>
-        )}
 
         {/* Tabs */}
         <Tabs defaultValue="my-templates" className="w-full">
@@ -268,7 +270,7 @@ export function TemplatesPage() {
                               <MoreVertical className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuItem onClick={() => openPreviewModal(template)}>
                               <Eye className="w-4 h-4 mr-2" />
                               Preview
@@ -277,16 +279,22 @@ export function TemplatesPage() {
                               <Edit className="w-4 h-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleCreateNewVersion(template.id, template.name)}>
+                              <GitBranch className="w-4 h-4 mr-2" />
+                              Criar Nova Versão
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openDuplicateDialog(template.id, template.name)}>
+                              <Copy className="w-4 h-4 mr-2" />
+                              Duplicar Template
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             {!template.isDefault && (
                               <DropdownMenuItem onClick={() => handleSetDefault(template.id)}>
                                 <Star className="w-4 h-4 mr-2" />
                                 Set as default
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onClick={() => openDuplicateDialog(template.id, template.name)}>
-                              <Copy className="w-4 h-4 mr-2" />
-                              Duplicate
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleExport(template.id, template.name)}>
                               <Download className="w-4 h-4 mr-2" />
                               Export
@@ -336,7 +344,7 @@ export function TemplatesPage() {
 
           {/* Marketplace Tab */}
           <TabsContent value="marketplace" className="mt-6">
-            <TemplateMarketplace />
+            <TemplateMarketplace onTemplateCreated={createTemplate} />
           </TabsContent>
         </Tabs>
 

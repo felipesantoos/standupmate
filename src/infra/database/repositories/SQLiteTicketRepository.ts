@@ -12,6 +12,7 @@ import { TicketFilter } from '@core/services/filters/TicketFilter';
 import { TicketStatus } from '@core/domain/types';
 import { Database } from '../sqlite';
 import { TicketMapper, TicketRow } from '../mappers/TicketMapper';
+import { TemplateNotFoundException } from '@core/exceptions/DomainExceptions';
 
 export class SQLiteTicketRepository implements ITicketRepository {
   /**
@@ -118,69 +119,79 @@ export class SQLiteTicketRepository implements ITicketRepository {
   async save(ticket: Ticket): Promise<Ticket> {
     const row = TicketMapper.fromDomain(ticket);
 
-    // Check if ticket exists
-    const exists = await this.exists(ticket.id);
+    try {
+      // Check if ticket exists
+      const exists = await this.exists(ticket.id);
 
-    if (exists) {
-      // Update existing ticket
-      const sql = `
-        UPDATE tickets
-        SET template_id = ?,
-            template_version = ?,
-            status = ?,
-            data_json = ?,
-            metadata_json = ?,
-            tags_json = ?,
-            updated_at = ?,
-            completed_at = ?
-        WHERE id = ?
-      `;
+      if (exists) {
+        // Update existing ticket
+        const sql = `
+          UPDATE tickets
+          SET template_id = ?,
+              template_version = ?,
+              status = ?,
+              data_json = ?,
+              metadata_json = ?,
+              tags_json = ?,
+              updated_at = ?,
+              completed_at = ?
+          WHERE id = ?
+        `;
 
-      await this.db.execute(sql, [
-        row.template_id,
-        row.template_version,
-        row.status,
-        row.data_json,
-        row.metadata_json,
-        row.tags_json,
-        row.updated_at,
-        row.completed_at,
-        row.id,
-      ]);
-    } else {
-      // Insert new ticket
-      const sql = `
-        INSERT INTO tickets (
-          id, template_id, template_version, status,
-          data_json, metadata_json, tags_json,
-          created_at, updated_at, completed_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `;
+        await this.db.execute(sql, [
+          row.template_id,
+          row.template_version,
+          row.status,
+          row.data_json,
+          row.metadata_json,
+          row.tags_json,
+          row.updated_at,
+          row.completed_at,
+          row.id,
+        ]);
+      } else {
+        // Insert new ticket
+        const sql = `
+          INSERT INTO tickets (
+            id, template_id, template_version, status,
+            data_json, metadata_json, tags_json,
+            created_at, updated_at, completed_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
 
-      await this.db.execute(sql, [
-        row.id,
-        row.template_id,
-        row.template_version,
-        row.status,
-        row.data_json,
-        row.metadata_json,
-        row.tags_json,
-        row.created_at,
-        row.updated_at,
-        row.completed_at,
-      ]);
+        await this.db.execute(sql, [
+          row.id,
+          row.template_id,
+          row.template_version,
+          row.status,
+          row.data_json,
+          row.metadata_json,
+          row.tags_json,
+          row.created_at,
+          row.updated_at,
+          row.completed_at,
+        ]);
+      }
+
+      // Return saved ticket
+      const saved = await this.findById(ticket.id);
+      return saved!;
+    } catch (error: any) {
+      // Transform database errors into domain exceptions
+      if (error?.message?.includes('FOREIGN KEY constraint failed')) {
+        throw new TemplateNotFoundException(ticket.templateId);
+      }
+      
+      // Re-throw other errors
+      throw error;
     }
-
-    // Return saved ticket
-    const saved = await this.findById(ticket.id);
-    return saved!;
   }
 
   async delete(id: string): Promise<boolean> {
     const sql = 'DELETE FROM tickets WHERE id = ?';
     const result = await this.db.execute(sql, [id]);
 
-    return result.changes > 0;
+    return (result.changes ?? 0) > 0;
   }
 
   async count(filter?: TicketFilter): Promise<number> {

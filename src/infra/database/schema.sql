@@ -11,7 +11,7 @@
 
 CREATE TABLE IF NOT EXISTS templates (
   id TEXT PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
   version TEXT NOT NULL,
   is_default INTEGER NOT NULL DEFAULT 0,
@@ -23,7 +23,9 @@ CREATE TABLE IF NOT EXISTS templates (
   
   -- Constraints
   CHECK (length(name) >= 3),
-  CHECK (length(name) <= 200)
+  CHECK (length(name) <= 200),
+  -- Unique constraint on name and version combination
+  UNIQUE(name, version)
 );
 
 -- Indexes for templates

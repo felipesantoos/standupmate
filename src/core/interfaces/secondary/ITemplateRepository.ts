@@ -77,5 +77,30 @@ export interface ITemplateRepository {
    * @returns Total number of templates
    */
   count(): Promise<number>;
+
+  /**
+   * Find template by name and version
+   * 
+   * @param name - Template name
+   * @param version - Template version
+   * @returns Template if found, null otherwise
+   */
+  findByNameAndVersion(name: string, version: string): Promise<Template | null>;
+
+  /**
+   * Find all versions of a template by name
+   * 
+   * @param name - Template name
+   * @returns List of all versions of the template
+   */
+  findVersionsByName(name: string): Promise<Template[]>;
+
+  /**
+   * Check if template has associated tickets
+   * 
+   * @param id - Template ID
+   * @returns true if template has tickets, false otherwise
+   */
+  hasAssociatedTickets(id: string): Promise<boolean>;
 }
 

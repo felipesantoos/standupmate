@@ -85,7 +85,8 @@ class SQLiteDatabase implements Database {
         author TEXT,
         sections_json TEXT NOT NULL,
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        updated_at TEXT NOT NULL,
+        UNIQUE(name, version)
       );
 
       -- Tickets table

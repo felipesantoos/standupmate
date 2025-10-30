@@ -272,6 +272,40 @@ export class Template {
   }
 
   /**
+   * Business operation: Create new version of template
+   * Returns a new Template instance with incremented major version
+   * Keeps the same name but creates a new version
+   */
+  createNewVersion(): Template {
+    const now = new Date();
+    
+    // Increment major version (e.g., 1.0.0 -> 2.0.0)
+    const newVersion = this.incrementMajorVersion(this.version);
+    
+    return new Template(
+      `template-${Date.now()}`, // New ID
+      this.name, // Same name
+      this.description,
+      newVersion, // Incremented version
+      false, // Not default
+      JSON.parse(JSON.stringify(this.sections)), // Deep copy sections
+      now,
+      now,
+      this.author
+    );
+  }
+
+  /**
+   * Helper: Increment major version
+   * Private helper for version management
+   */
+  private incrementMajorVersion(version: string): string {
+    const parts = version.split('.');
+    const major = parseInt(parts[0], 10);
+    return `${major + 1}.0.0`;
+  }
+
+  /**
    * Helper: Get field by ID across all sections
    */
   getFieldById(fieldId: string): Field | null {

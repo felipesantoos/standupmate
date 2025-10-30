@@ -20,6 +20,9 @@ interface UseTemplatesResult {
   setAsDefault: (id: string) => Promise<Template>;
   importFromJSON: (json: string) => Promise<Template>;
   exportToJSON: (id: string) => Promise<string>;
+  createNewVersion: (id: string) => Promise<Template>;
+  canEdit: (id: string) => Promise<boolean>;
+  getVersions: (name: string) => Promise<Template[]>;
   refresh: () => Promise<void>;
 }
 
@@ -194,6 +197,52 @@ export function useTemplates(autoLoad: boolean = true): UseTemplatesResult {
   };
 
   /**
+   * Create new version of template
+   */
+  const createNewVersion = async (id: string): Promise<Template> => {
+    try {
+      setError(null);
+      const service = await createTemplateService();
+      const newVersion = await service.createNewVersion(id);
+      
+      setTemplates(prev => [newVersion, ...prev]);
+      
+      return newVersion;
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  };
+
+  /**
+   * Check if template can be edited
+   */
+  const canEdit = async (id: string): Promise<boolean> => {
+    try {
+      setError(null);
+      const service = await createTemplateService();
+      return await service.canEditTemplate(id);
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  };
+
+  /**
+   * Get all versions of a template
+   */
+  const getVersions = async (name: string): Promise<Template[]> => {
+    try {
+      setError(null);
+      const service = await createTemplateService();
+      return await service.getTemplateVersions(name);
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  };
+
+  /**
    * Refresh templates
    */
   const refresh = useCallback(async () => {
@@ -220,6 +269,9 @@ export function useTemplates(autoLoad: boolean = true): UseTemplatesResult {
     setAsDefault,
     importFromJSON,
     exportToJSON,
+    createNewVersion,
+    canEdit,
+    getVersions,
     refresh,
   };
 }
