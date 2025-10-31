@@ -44,9 +44,9 @@ export function StatusDistributionChart({ data, loading }: StatusDistributionCha
       const data = payload[0].payload;
       return (
         <div 
-          className="rounded-lg border bg-card p-3 shadow-sm"
+          className="rounded-lg border bg-popover p-3 shadow-sm text-popover-foreground"
           style={{ 
-            backgroundColor: 'hsl(var(--card))', 
+            backgroundColor: 'hsl(var(--popover))', 
             border: '1px solid hsl(var(--border))',
           }}
         >

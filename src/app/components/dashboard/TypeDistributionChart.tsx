@@ -33,7 +33,7 @@ export function TypeDistributionChart({ data, loading }: TypeDistributionChartPr
           <Skeleton className="h-4 w-32 mt-2" />
         </CardHeader>
         <CardContent>
-          <Skeleton className="h-[250px] w-full" />
+          <Skeleton className="h-[300px] w-full" />
         </CardContent>
       </Card>
     );
@@ -51,6 +51,37 @@ export function TypeDistributionChart({ data, loading }: TypeDistributionChartPr
     );
   }
 
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div 
+          className="rounded-lg border bg-popover p-3 shadow-sm text-popover-foreground"
+          style={{ 
+            backgroundColor: 'hsl(var(--popover))', 
+            border: '1px solid hsl(var(--border))',
+          }}
+        >
+          <p className="font-semibold">{data.type}</p>
+          <p className="text-sm text-muted-foreground">
+            {data.count} tickets ({data.percentage}%)
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Show only initials of label text
+  const renderLabel = ({ type, percentage }: any) => {
+    const initials = type
+      .split(/[\s/]+/) // Split by spaces or slashes
+      .map((word: string) => word.charAt(0).toUpperCase())
+      .join('');
+    return `${initials}: ${percentage}%`;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -58,14 +89,14 @@ export function TypeDistributionChart({ data, loading }: TypeDistributionChartPr
         <CardDescription>Breakdown of tickets by category</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ type, percentage }) => `${type}: ${percentage}%`}
+              label={renderLabel}
               outerRadius={80}
               fill="#8884d8"
               dataKey="count"
@@ -74,17 +105,7 @@ export function TypeDistributionChart({ data, loading }: TypeDistributionChartPr
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip 
-              formatter={(value: number, name: string, entry: any) => {
-                return [`${value} tickets (${entry.payload.percentage}%)`, entry.payload.type];
-              }}
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }} 
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
           </PieChart>
         </ResponsiveContainer>

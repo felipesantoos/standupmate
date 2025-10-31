@@ -79,7 +79,7 @@ export class AnalyticsService {
     
     tickets.forEach((ticket) => {
       // Check if type exists in ticket data
-      let type = ticket.data['type'];
+      let type = ticket.data['ticket_type'];
       
       // Handle FieldOption format (objects with value/label)
       if (type && typeof type === 'object' && 'value' in type) {
@@ -117,10 +117,10 @@ export class AnalyticsService {
     
     // Map status to friendly names
     const statusNames: Record<string, string> = {
-      [TicketStatus.DRAFT]: 'Rascunho',
-      [TicketStatus.IN_PROGRESS]: 'Em Progresso',
-      [TicketStatus.COMPLETED]: 'Concluído',
-      [TicketStatus.ARCHIVED]: 'Arquivado',
+      [TicketStatus.DRAFT]: 'Draft',
+      [TicketStatus.IN_PROGRESS]: 'In Progress',
+      [TicketStatus.COMPLETED]: 'Completed',
+      [TicketStatus.ARCHIVED]: 'Archived',
     };
     
     return Object.entries(counts).map(([status, count]) => ({

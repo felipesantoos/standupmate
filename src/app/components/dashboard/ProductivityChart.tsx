@@ -29,6 +29,30 @@ export function ProductivityChart({ data, loading }: ProductivityChartProps) {
     );
   }
 
+  // Custom tooltip
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div 
+          className="rounded-lg border bg-popover p-3 shadow-sm text-popover-foreground"
+          style={{ 
+            backgroundColor: 'hsl(var(--popover))', 
+            border: '1px solid hsl(var(--border))',
+          }}
+        >
+          <p className="font-semibold mb-2">{new Date(label).toLocaleDateString('en-US')}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-sm">
+              <span style={{ color: entry.color }}>{entry.name}: </span>
+              <span className="font-medium">{entry.value}</span>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -47,15 +71,7 @@ export function ProductivityChart({ data, loading }: ProductivityChartProps) {
               tickFormatter={(date) => new Date(date).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
             />
             <YAxis className="text-xs" tickLine={false} axisLine={false} />
-            <Tooltip 
-              labelFormatter={(date) => new Date(date).toLocaleDateString('en-US')}
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))', 
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Legend />
             <Line 
               type="monotone" 
