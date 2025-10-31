@@ -10,6 +10,7 @@ import { useTickets, useDailyStandupTickets } from '@app/hooks/useTickets';
 import { useAnalytics } from '@app/hooks/useAnalytics';
 import { TicketStatus } from '@core/domain/types';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
+import { TicketBlocker } from '@core/interfaces/primary/IExportService';
 import { MetricsCards } from '@app/components/dashboard/MetricsCards';
 import { DailyStandupCard } from '@app/components/dashboard/DailyStandupCard';
 import { ProductivityChart } from '@app/components/dashboard/ProductivityChart';
@@ -44,6 +45,26 @@ export function DashboardPage() {
   // Daily standup data
   const { yesterdayTickets, todayTickets, loading } = useDailyStandupTickets();
 
+  // Extract blockers from today's tickets
+  const blockers = useMemo(() => {
+    const blockersList: TicketBlocker[] = [];
+    
+    todayTickets.forEach((ticket) => {
+      if (ticket.hasBlocker()) {
+        const blockerText = ticket.getBlocker();
+        if (blockerText) {
+          blockersList.push({
+            ticketId: ticket.id,
+            ticketTitle: ticket.getTitle(),
+            blocker: blockerText,
+          });
+        }
+      }
+    });
+    
+    return blockersList;
+  }, [todayTickets]);
+
   // Analytics data
   const { productivityData, typeDistribution, statusDistribution } = useAnalytics(allTickets);
 
@@ -74,7 +95,7 @@ export function DashboardPage() {
       <DailyStandupCard
         yesterdayTickets={yesterdayTickets}
         todayTickets={todayTickets}
-        blockers={[]}
+        blockers={blockers}
       />
     </div>
   );

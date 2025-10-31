@@ -80,7 +80,10 @@ export async function createTicketService(): Promise<ITicketService> {
   const db = await getDatabase();
   const repository = new SQLiteTicketRepository(db);
   
-  ticketServiceInstance = new TicketService(repository);
+  // Get template service for validations
+  const templateService = await createTemplateService();
+  
+  ticketServiceInstance = new TicketService(repository, templateService);
   return ticketServiceInstance;
 }
 

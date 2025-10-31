@@ -13,18 +13,22 @@ import { useTemplates } from '@app/hooks/useTemplates';
 import { useExport } from '@app/hooks/useExport';
 import { toast } from 'sonner';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
+import { TicketStatus } from '@core/domain/types';
+import { Ticket } from '@core/domain/Ticket';
 import { TicketList } from '@app/components/ticket/TicketList';
 import { TicketFilters } from '@app/components/ticket/TicketFilters';
 import { BatchActions } from '@app/components/ticket/BatchActions';
+import { BulkUpdateResultModal } from '@app/components/ticket/BulkUpdateResultModal';
 import { Button } from '@app/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@app/components/ui/alert';
 import { Separator } from '@app/components/ui/separator';
 
 export function TicketsPage() {
   const [filter, setFilter] = useState<TicketFilter>(new TicketFilter());
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
+  const [bulkUpdateFailed, setBulkUpdateFailed] = useState<Array<{ id: string; ticket: Ticket; error: string }>>([]);
+  const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
   
-  const { tickets, loading, error, totalCount, deleteTicket, markAsCompleted, archiveTicket, updateTicketStatus } = useTickets(filter);
+  const { tickets, loading, error, totalCount, deleteTicket, markAsCompleted, archiveTicket, updateTicketStatus, bulkUpdateTicketStatus } = useTickets(filter);
   const { templates } = useTemplates();
   const { exportTicketsToMarkdown, downloadAsFile } = useExport();
 
@@ -71,8 +75,22 @@ export function TicketsPage() {
   // Batch mark complete
   const handleBatchComplete = async () => {
     try {
-      await Promise.all(selectedTickets.map((id) => markAsCompleted(id)));
-      toast.success(`${selectedTickets.length} ticket(s) marked as complete.`);
+      const result = await bulkUpdateTicketStatus(selectedTickets, TicketStatus.COMPLETED);
+      
+      // Check if there were failures
+      if (result.failed.length > 0) {
+        setBulkUpdateFailed(result.failed);
+        setShowBulkUpdateModal(true);
+        
+        // Show partial success message if some succeeded
+        if (result.successful.length > 0) {
+          toast.success(`${result.successful.length} ticket(s) marked as completed. ${result.failed.length} failed.`);
+        }
+      } else {
+        // All successful
+        toast.success(`${result.successful.length} ticket(s) marked as completed.`);
+      }
+      
       setSelectedTickets([]);
     } catch (error) {
       toast.error((error as Error).message);
@@ -101,10 +119,24 @@ export function TicketsPage() {
   };
 
   // Handle bulk status change
-  const handleBulkStatusChange = async (status: any) => {
+  const handleBulkStatusChange = async (status: TicketStatus) => {
     try {
-      await Promise.all(selectedTickets.map((id) => updateTicketStatus(id, status)));
-      toast.success(`${selectedTickets.length} ticket(s) status updated.`);
+      const result = await bulkUpdateTicketStatus(selectedTickets, status);
+      
+      // Check if there were failures
+      if (result.failed.length > 0) {
+        setBulkUpdateFailed(result.failed);
+        setShowBulkUpdateModal(true);
+        
+        // Show partial success message if some succeeded
+        if (result.successful.length > 0) {
+          toast.success(`${result.successful.length} ticket(s) updated. ${result.failed.length} failed.`);
+        }
+      } else {
+        // All successful
+        toast.success(`${result.successful.length} ticket(s) updated.`);
+      }
+      
       setSelectedTickets([]);
     } catch (error) {
       toast.error((error as Error).message);
@@ -136,14 +168,6 @@ export function TicketsPage() {
         <TicketFilters filter={filter} onFilterChange={setFilter} />
       </div>
 
-      {/* Error State */}
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertTitle>Error loading tickets</AlertTitle>
-          <AlertDescription>{error.message}</AlertDescription>
-        </Alert>
-      )}
-
       {/* Ticket List */}
       <TicketList
         tickets={tickets}
@@ -167,6 +191,13 @@ export function TicketsPage() {
         onMarkComplete={handleBatchComplete}
         onClearSelection={() => setSelectedTickets([])}
         onStatusChange={handleBulkStatusChange}
+      />
+
+      {/* Bulk Update Result Modal */}
+      <BulkUpdateResultModal
+        isOpen={showBulkUpdateModal}
+        onClose={() => setShowBulkUpdateModal(false)}
+        failed={bulkUpdateFailed}
       />
     </div>
   );

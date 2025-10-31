@@ -107,6 +107,21 @@ export interface ITicketService {
   updateTicketStatus(id: string, status: TicketStatus): Promise<Ticket>;
 
   /**
+   * Bulk update ticket status
+   * 
+   * Updates multiple tickets to a new status.
+   * Processes each ticket individually and captures failures.
+   * 
+   * @param ids - Array of ticket IDs
+   * @param status - New status
+   * @returns Object with successful and failed updates
+   */
+  bulkUpdateTicketStatus(ids: string[], status: TicketStatus): Promise<{
+    successful: Ticket[];
+    failed: Array<{ id: string; ticket: Ticket; error: string }>;
+  }>;
+
+  /**
    * Count tickets with optional filtering
    * 
    * Essential for pagination metadata.

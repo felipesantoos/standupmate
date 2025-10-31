@@ -17,8 +17,6 @@ import { TagManager } from '@app/components/ticket/TagManager';
 import { Button } from '@app/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/card';
 import { Spinner } from '@app/components/ui/spinner';
-import { Separator } from '@app/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@app/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@app/components/ui/select';
 import { Badge } from '@app/components/ui/badge';
 
@@ -29,13 +27,12 @@ function PageSpinner() {
     </div>
   );
 }
-import { Save, ArrowLeft, Undo, Redo, History, PlayCircle, CheckCircle, Download, FileEdit, Archive, Copy } from 'lucide-react';
+import { Save, ArrowLeft, History, PlayCircle, CheckCircle, Download, FileEdit, Archive, Copy } from 'lucide-react';
 import { TicketHistoryTimeline } from '@app/components/ticket/TicketHistoryTimeline';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
 import { useKeyboardShortcuts, SHORTCUTS } from '@app/hooks/useKeyboardShortcuts';
 import { useExport } from '@app/hooks/useExport';
-import { useUndoRedo } from '@app/hooks/useUndoRedo';
 import { TicketChange, ChangeType } from '@core/domain/TicketHistory';
 
 export function TicketEditPage() {
@@ -53,18 +50,15 @@ export function TicketEditPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showHistory, setShowHistory] = useState(false);
+  const [ticketLoadAttempted, setTicketLoadAttempted] = useState(false);
   const [ticketHistory, setTicketHistory] = useState<TicketChange[]>([]);
 
-  // Undo/Redo for ticket data
-  const {
-    state: ticketData,
-    setState: setTicketData,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    reset: resetUndoRedo,
-  } = useUndoRedo<Record<string, any>>({});
+  // Reset ticket load state when ID changes
+  useEffect(() => {
+    setTicketLoadAttempted(false);
+    setTicket(null);
+    setTemplate(null);
+  }, [id]);
 
   // Load ticket and template
   useEffect(() => {
@@ -75,24 +69,31 @@ export function TicketEditPage() {
       if (defaultTemplate && !selectedTemplateId) {
         setSelectedTemplateId(defaultTemplate.id);
       }
+      setTicketLoadAttempted(true);
     } else {
       // Load existing ticket
       const existingTicket = tickets.find((t) => t.id === id);
       if (existingTicket) {
-        setTicket(existingTicket);
-        const ticketTemplate = templates.find((t) => t.id === existingTicket.templateId);
-        setTemplate(ticketTemplate || null);
-        resetUndoRedo(existingTicket.data);
-        
-        // Load history from localStorage
-        const savedHistory = localStorage.getItem(`ticket-history-${id}`);
-        if (savedHistory) {
-          const parsed = JSON.parse(savedHistory);
-          setTicketHistory(parsed.map((h: any) => ({
-            ...h,
-            timestamp: new Date(h.timestamp),
-          })));
+        // Only update ticket if it's different (to avoid unnecessary re-renders)
+        if (!ticket || ticket.id !== existingTicket.id || ticket.updatedAt.getTime() !== existingTicket.updatedAt.getTime()) {
+          setTicket(existingTicket);
+          const ticketTemplate = templates.find((t) => t.id === existingTicket.templateId);
+          setTemplate(ticketTemplate || null);
+          
+          // Load history from localStorage
+          const savedHistory = localStorage.getItem(`ticket-history-${id}`);
+          if (savedHistory) {
+            const parsed = JSON.parse(savedHistory);
+            setTicketHistory(parsed.map((h: any) => ({
+              ...h,
+              timestamp: new Date(h.timestamp),
+            })));
+          }
         }
+        setTicketLoadAttempted(true);
+      } else if (tickets.length > 0) {
+        // Tickets loaded but ticket not found
+        setTicketLoadAttempted(true);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,7 +117,6 @@ export function TicketEditPage() {
         );
         setTicket(newTicket);
         setTemplate(selectedTemplate);
-        resetUndoRedo({});
         
         // Initial history entry
         const initialChange: TicketChange = {
@@ -153,26 +153,6 @@ export function TicketEditPage() {
     enabled: !isNew && !!ticket,
   });
 
-  // Sync undo/redo state with ticket when undo/redo is used
-  useEffect(() => {
-    if (ticket && Object.keys(ticketData).length > 0 && JSON.stringify(ticket.data) !== JSON.stringify(ticketData)) {
-      const updatedTicket = new Ticket(
-        ticket.id,
-        ticket.templateId,
-        ticket.templateVersion,
-        ticket.status,
-        ticketData,
-        ticket.metadata,
-        ticket.tags,
-        ticket.createdAt,
-        new Date(),
-        ticket.completedAt
-      );
-      setTicket(updatedTicket);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticketData]);
-
   // Update field value
   const updateField = (fieldId: string, value: any) => {
     if (!ticket) return;
@@ -195,9 +175,6 @@ export function TicketEditPage() {
     );
 
     setTicket(updatedTicket);
-    
-    // Update undo/redo state
-    setTicketData(newData);
 
     // Track change in history (only if value actually changed)
     if (!isNew && oldValue !== value) {
@@ -341,7 +318,7 @@ export function TicketEditPage() {
 
     try {
       const markdown = await exportTicketToMarkdown(ticket, template);
-      const filename = `ticket-${ticket.data['title'] || 'untitled'}.md`
+      const filename = `ticket-${ticket.getTitle()}.md`
         .toLowerCase()
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-]/g, '');
@@ -395,6 +372,20 @@ export function TicketEditPage() {
     );
   }
 
+  // Ticket not found after loading
+  if (!isNew && ticketLoadAttempted && !ticket && !ticketsLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <h2 className="text-2xl font-semibold">Ticket not found</h2>
+        <p className="text-muted-foreground">The ticket you're looking for doesn't exist.</p>
+        <Button onClick={() => navigate('/tickets')}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Tickets
+        </Button>
+      </div>
+    );
+  }
+
   // Final check
   if (!ticket || !template) {
     return <PageSpinner />;
@@ -416,31 +407,6 @@ export function TicketEditPage() {
         </div>
 
         <div className="flex gap-2 flex-wrap">
-          {/* Undo/Redo */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={undo} disabled={!canUndo}>
-                  <Undo className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Undo (Ctrl+Z)</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" onClick={redo} disabled={!canRedo}>
-                  <Redo className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Redo (Ctrl+Y)</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <Separator orientation="vertical" className="h-8" />
-
           {!isNew && (
             <>
               {/* Status Dropdown */}

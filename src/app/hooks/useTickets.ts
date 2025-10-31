@@ -10,6 +10,7 @@ import { Ticket } from '@core/domain/Ticket';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
 import { TicketStatus } from '@core/domain/types';
 import { createTicketService } from '@/lib/serviceFactory';
+import { toast } from 'sonner';
 
 interface UseTicketsResult {
   tickets: Ticket[];
@@ -18,6 +19,10 @@ interface UseTicketsResult {
   createTicket: (ticket: Ticket) => Promise<Ticket>;
   updateTicket: (id: string, ticket: Ticket) => Promise<Ticket>;
   updateTicketStatus: (id: string, status: TicketStatus) => Promise<Ticket>;
+  bulkUpdateTicketStatus: (ids: string[], status: TicketStatus) => Promise<{
+    successful: Ticket[];
+    failed: Array<{ id: string; ticket: Ticket; error: string }>;
+  }>;
   deleteTicket: (id: string) => Promise<void>;
   markAsCompleted: (id: string) => Promise<Ticket>;
   markAsInProgress: (id: string) => Promise<Ticket>;
@@ -139,7 +144,11 @@ export function useTickets(
       
       return updated;
     } catch (err) {
-      setError(err as Error);
+      // Don't set error state for validation errors - let UI handle them
+      const error = err as Error;
+      if (!error.message.includes('required fields')) {
+        setError(error);
+      }
       throw err;
     }
   };
@@ -158,7 +167,43 @@ export function useTickets(
       
       return updated;
     } catch (err) {
-      setError(err as Error);
+      // Don't set error state for validation errors - let UI handle them
+      const error = err as Error;
+      if (!error.message.includes('required fields')) {
+        setError(error);
+      }
+      throw err;
+    }
+  };
+
+  /**
+   * Bulk update ticket status
+   */
+  const bulkUpdateTicketStatus = async (
+    ids: string[],
+    status: TicketStatus
+  ): Promise<{
+    successful: Ticket[];
+    failed: Array<{ id: string; ticket: Ticket; error: string }>;
+  }> => {
+    try {
+      setError(null);
+      const service = await createTicketService();
+      const result = await service.bulkUpdateTicketStatus(ids, status);
+      
+      // Update local state with successful updates
+      if (result.successful.length > 0) {
+        setTickets(prev =>
+          prev.map(t => {
+            const updated = result.successful.find(u => u.id === t.id);
+            return updated || t;
+          })
+        );
+      }
+      
+      return result;
+    } catch (err) {
+      // Don't set error state - bulk operations handle their own error display
       throw err;
     }
   };
@@ -222,6 +267,7 @@ export function useTickets(
     createTicket,
     updateTicket,
     updateTicketStatus,
+    bulkUpdateTicketStatus,
     deleteTicket,
     markAsCompleted,
     markAsInProgress,

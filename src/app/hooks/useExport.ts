@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { Ticket } from '@core/domain/Ticket';
 import { Template } from '@core/domain/Template';
+import { TicketBlocker } from '@core/interfaces/primary/IExportService';
 import { createExportService } from '@/lib/serviceFactory';
 
 interface UseExportResult {
@@ -19,7 +20,7 @@ interface UseExportResult {
   generateDailyStandup: (
     yesterdayTickets: Ticket[],
     todayTickets: Ticket[],
-    blockers: string[]
+    blockers: TicketBlocker[]
   ) => Promise<string>;
   exportDatabaseAsJSON: () => Promise<string>;
   downloadAsFile: (content: string, filename: string) => void;
@@ -103,7 +104,7 @@ export function useExport(): UseExportResult {
   const generateDailyStandup = async (
     yesterdayTickets: Ticket[],
     todayTickets: Ticket[],
-    blockers: string[]
+    blockers: TicketBlocker[]
   ): Promise<string> => {
     try {
       setLoading(true);

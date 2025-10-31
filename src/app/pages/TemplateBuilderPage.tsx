@@ -31,6 +31,132 @@ import { Save, ArrowLeft, Eye, EyeOff, Plus, Maximize2, GitBranch, Lock } from '
 import { v4 as uuidv4 } from 'uuid';
 import { Alert, AlertDescription, AlertTitle } from '@app/components/ui/alert';
 
+/**
+ * Get recommended fields for a new template
+ * 
+ * The system auto-detects special fields using smart matching:
+ * 
+ * TITLE FIELDS (auto-detected by Ticket.getTitle()):
+ * - 'title' ✅ (preferred) or any field containing 'title', 'titulo', 'nome'
+ * - Falls back to the first non-empty text field if no title field found
+ * 
+ * DESCRIPTION FIELDS (auto-detected by Ticket.getDescription()):
+ * - 'description' ✅ (preferred) or any field containing 'description', 'descricao', 'details'
+ * 
+ * BLOCKER FIELDS (auto-detected by Ticket.getBlocker()):
+ * - 'blockers' ✅ (preferred) or any field containing 'blocker', 'impediment', 'bloqueador'
+ * 
+ * The system uses intelligent matching:
+ * 1. First tries exact matches (case-sensitive)
+ * 2. Then tries partial matches (case-insensitive)
+ * 3. Falls back to sensible defaults
+ * 
+ * These auto-detected fields appear in:
+ * - Dashboard Daily Standup Card
+ * - Ticket List & Cards
+ * - Export/Copy functions
+ * - All reports
+ * 
+ * You can use any field IDs you want - the system will find them automatically!
+ */
+function getRecommendedFields(): Field[] {
+  return [
+    {
+      id: 'title', // ✅ Recognized system-wide
+      label: 'Title',
+      type: FieldType.TEXT,
+      required: true,
+      placeholder: 'Enter a clear, concise title',
+      order: 0,
+      validation: {
+        minLength: 3,
+        maxLength: 200,
+      },
+    },
+    {
+      id: 'description', // ✅ Recognized system-wide
+      label: 'Description',
+      type: FieldType.MARKDOWN,
+      required: false,
+      placeholder: 'Describe what needs to be done and why...',
+      order: 1,
+      validation: {
+        minLength: 10,
+      },
+    },
+    {
+      id: 'type', // Common field for categorization
+      label: 'Type',
+      type: FieldType.SELECT,
+      required: false,
+      order: 2,
+      options: ['Feature', 'Bug', 'Task', 'Documentation', 'Investigation'],
+    },
+    {
+      id: 'priority', // Common field, stored in metadata
+      label: 'Priority',
+      type: FieldType.SELECT,
+      required: false,
+      order: 3,
+      options: ['🔴 Critical', '🟠 High', '🟡 Medium', '🟢 Low'],
+    },
+    {
+      id: 'blockers', // ✅ Recognized system-wide
+      label: 'Blockers',
+      type: FieldType.TEXTAREA,
+      required: false,
+      placeholder: 'List any blockers or impediments...',
+      order: 4,
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      type: FieldType.SELECT,
+      required: false,
+      order: 5,
+      options: ['📋 To Do', '🚧 In Progress', '👀 In Review', '✅ Done', '🚫 Blocked'],
+    },
+    {
+      id: 'assignee',
+      label: 'Assignee',
+      type: FieldType.TEXT,
+      required: false,
+      placeholder: 'Who is responsible for this?',
+      order: 6,
+    },
+    {
+      id: 'due_date',
+      label: 'Due Date',
+      type: FieldType.DATE,
+      required: false,
+      order: 7,
+    },
+    {
+      id: 'estimated_hours',
+      label: 'Estimated Hours',
+      type: FieldType.NUMBER,
+      required: false,
+      placeholder: 'Estimated time to complete',
+      order: 8,
+      validation: {
+        min: 0,
+      },
+    },
+  ];
+}
+
+/**
+ * Get recommended starter section with common fields
+ */
+function getRecommendedSection(): Section {
+  return {
+    id: uuidv4(),
+    title: 'Ticket Information',
+    order: 0,
+    fields: getRecommendedFields(),
+  };
+}
+
 export function TemplateBuilderPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -48,14 +174,14 @@ export function TemplateBuilderPage() {
   // Load template for editing
   useEffect(() => {
     if (isNew) {
-      // Create new template
+      // Create new template with recommended fields
       const newTemplate = new Template(
         uuidv4(),
         'New Template',
-        '',
+        'Customize this template for your workflow',
         '1.0.0',
         false,
-        [],
+        [getRecommendedSection()], // Start with recommended fields
         new Date(),
         new Date()
       );
@@ -374,34 +500,47 @@ export function TemplateBuilderPage() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowPreviewModal(true)}>
             <Maximize2 className="w-4 h-4 mr-2" />
-            Preview Completo
+            Full Preview
           </Button>
           <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
             {showPreview ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
-            {showPreview ? 'Ocultar' : 'Preview'}
+            {showPreview ? 'Hide' : 'Preview'}
           </Button>
           {!isNew && !canEditTemplate ? (
             <Button onClick={handleCreateNewVersion}>
               <GitBranch className="w-4 h-4 mr-2" />
-              Criar Nova Versão
+              Create New Version
             </Button>
           ) : (
             <Button onClick={handleSave}>
               <Save className="w-4 h-4 mr-2" />
-              Salvar
+              Save
             </Button>
           )}
         </div>
       </div>
 
+      {/* Alert for new templates with recommended fields */}
+      {isNew && (
+        <Alert className="mb-6 border-primary/50 bg-primary/5">
+          <Plus className="h-4 w-4" />
+          <AlertTitle>Recommended Fields Included</AlertTitle>
+          <AlertDescription>
+            We've included common fields that are automatically recognized by the system:
+            <strong> title</strong>, <strong>description</strong>, <strong>type</strong>, <strong>priority</strong>, <strong>blockers</strong>, <strong>status</strong>, <strong>assignee</strong>, <strong>due_date</strong>, and <strong>estimated_hours</strong>.
+            You can customize, remove, or add new fields as needed.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Alert for locked templates */}
       {!isNew && !canEditTemplate && !checkingEditPermission && (
         <Alert className="mb-6">
           <Lock className="h-4 w-4" />
-          <AlertTitle>Template bloqueado para edição</AlertTitle>
+          <AlertTitle>Template Locked for Editing</AlertTitle>
           <AlertDescription>
-            Este template possui registros cadastrados e não pode ser editado diretamente.
-            Para fazer alterações, crie uma nova versão do template.
+            This template has existing records and cannot be edited directly.
+            To make changes, create a new version of the template.
           </AlertDescription>
         </Alert>
       )}

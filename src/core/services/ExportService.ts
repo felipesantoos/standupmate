@@ -7,7 +7,7 @@
 
 import { Ticket } from '@core/domain/Ticket';
 import { Template } from '@core/domain/Template';
-import { IExportService } from '@core/interfaces/primary/IExportService';
+import { IExportService, TicketBlocker } from '@core/interfaces/primary/IExportService';
 import { FieldType } from '@core/domain/types';
 import { exportDatabaseBinary } from '@infra/database/sqlite';
 
@@ -16,7 +16,7 @@ export class ExportService implements IExportService {
     const lines: string[] = [];
 
     // Header
-    lines.push(`# ${ticket.data['title'] || 'Untitled Ticket'}`);
+    lines.push(`# ${ticket.getTitle()}`);
     lines.push('');
     lines.push(`**📅 Date:** ${ticket.createdAt.toLocaleDateString()} | **👤 Dev:** ${ticket.metadata.dev} | **⏱️ Estimate:** ${ticket.metadata.estimate || 'Not set'}`);
     lines.push('');
@@ -161,7 +161,7 @@ export class ExportService implements IExportService {
   generateDailyStandup(
     yesterdayTickets: Ticket[],
     todayTickets: Ticket[],
-    blockers: string[]
+    blockers: TicketBlocker[]
   ): string {
     const lines: string[] = [];
     const today = new Date();
@@ -176,19 +176,23 @@ export class ExportService implements IExportService {
     lines.push('---');
     lines.push('');
 
-    // Yesterday
-    lines.push('## Yesterday (Completed)');
+    // Recently Completed
+    lines.push('## Recently Completed (Last 7 days)');
     lines.push('');
     if (yesterdayTickets.length > 0) {
       yesterdayTickets.forEach(ticket => {
-        const title = ticket.data['title'] || 'Untitled';
+        const title = ticket.getTitle();
+        const completedDate = ticket.completedAt 
+          ? ticket.completedAt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+          : 'Unknown';
         lines.push(`- ✅ **${ticket.id}**: ${title}`);
+        lines.push(`  - Completed: ${completedDate}`);
         if (ticket.metadata.actualTime) {
           lines.push(`  - Time spent: ${ticket.metadata.actualTime}`);
         }
       });
     } else {
-      lines.push('_No tickets completed yesterday_');
+      lines.push('_No tickets completed in the last 7 days_');
     }
     lines.push('');
 
@@ -197,8 +201,8 @@ export class ExportService implements IExportService {
     lines.push('');
     if (todayTickets.length > 0) {
       todayTickets.forEach(ticket => {
-        const title = ticket.data['title'] || 'Untitled';
-        lines.push(`- 🟡 **${ticket.id}**: ${title}`);
+        const title = ticket.getTitle();
+        lines.push(`- 🔄 **${ticket.id}**: ${title}`);
         if (ticket.metadata.estimate) {
           lines.push(`  - Estimate: ${ticket.metadata.estimate}`);
         }
@@ -212,8 +216,8 @@ export class ExportService implements IExportService {
     lines.push('## Blockers');
     lines.push('');
     if (blockers.length > 0) {
-      blockers.forEach(blocker => {
-        lines.push(`- ⚠️ ${blocker}`);
+      blockers.forEach(blockerItem => {
+        lines.push(`- ⚠️ **${blockerItem.ticketId}** (${blockerItem.ticketTitle}): ${blockerItem.blocker}`);
       });
     } else {
       lines.push('_No blockers_');
@@ -227,7 +231,7 @@ export class ExportService implements IExportService {
    * Private helper: Generate filename for ticket
    */
   private generateFilename(ticket: Ticket): string {
-    const title = ticket.data['title'] || 'untitled';
+    const title = ticket.getTitle();
     const sanitized = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')

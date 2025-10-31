@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@app/components/ui/car
 import { Input } from '@app/components/ui/input';
 import { Button } from '@app/components/ui/button';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface FieldPropertyEditorProps {
   field: Field;
@@ -19,6 +19,11 @@ interface FieldPropertyEditorProps {
 
 export function FieldPropertyEditor({ field, onUpdate, onClose }: FieldPropertyEditorProps) {
   const [localField, setLocalField] = useState(field);
+
+  // Sincroniza o estado local quando a prop field muda (quando outro campo é selecionado)
+  useEffect(() => {
+    setLocalField(field);
+  }, [field]);
 
   const handleUpdate = (key: keyof Field, value: any) => {
     const updated = { ...localField, [key]: value };

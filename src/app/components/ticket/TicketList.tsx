@@ -144,7 +144,7 @@ export function TicketList({
                 checked={selectedTickets.includes(ticket.id)}
                 onCheckedChange={() => toggleSelection(ticket.id)}
                 onClick={(e: any) => e.stopPropagation()}
-                aria-label={`Select ticket ${ticket.data['title'] || 'Untitled'}`}
+                aria-label={`Select ticket ${ticket.getTitle()}`}
                 className="shrink-0 opacity-60 group-hover/checkbox:opacity-100 transition-opacity"
               />
             )}

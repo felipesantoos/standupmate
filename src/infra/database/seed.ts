@@ -461,16 +461,14 @@ export async function seedSampleTickets(db: Database, templateId: string): Promi
     '1.0.0',
     TicketStatus.COMPLETED,
     {
-      title: 'Implementar Arquitetura Hexagonal',
+      ticket_title: 'Implementar Arquitetura Hexagonal',
       description: 'Criar estrutura base do projeto com arquitetura hexagonal, seguindo princípios SOLID.',
-      type: 'Feature',
-      estimate: '4h',
-      priority: 'Alta',
-      start_date: twoDaysAgo.toISOString().split('T')[0],
-      tasks: `- Criar domain models\n- Implementar repositories\n- Configurar services\n- Setup de testes`,
+      ticket_type: 'Feature/Implementation',
+      priority: '🟠 P1 High',
       actual_time: '5h 30min',
-      notes: 'Arquitetura ficou muito boa, extensível e testável.',
       learnings: 'Aprendi sobre Ports & Adapters e como aplicar SOLID na prática.',
+      summary: 'Implementei a estrutura base com domain, repositories e services seguindo arquitetura hexagonal.',
+      what_worked: 'A separação de responsabilidades ficou muito clara e testável.',
     },
     {
       dev: 'User',
@@ -491,15 +489,14 @@ export async function seedSampleTickets(db: Database, templateId: string): Promi
     '1.0.0',
     TicketStatus.IN_PROGRESS,
     {
-      title: 'Implementar UI Components',
+      ticket_title: 'Implementar UI Components',
       description: 'Criar componentes reutilizáveis: Button, Card, Input, etc.',
-      type: 'Feature',
-      estimate: '3h',
-      priority: 'Alta',
-      start_date: now.toISOString().split('T')[0],
-      tasks: `- ✅ Button component\n- ✅ Card component\n- 🔄 Input component\n- ⏳ Textarea component`,
-      actual_time: '2h',
+      ticket_type: 'Feature/Implementation',
+      priority: '🟠 P1 High',
+      time_estimate: '3h',
       blockers: 'Preciso decidir sobre biblioteca de componentes (Shadcn/ui vs custom).',
+      step_progress: '- Button component (DONE)\n- Card component (DONE)\n- Input component (IN PROGRESS)\n- Textarea component (TODO)',
+      daily_blockers: 'Preciso decidir sobre biblioteca de componentes (Shadcn/ui vs custom).',
     },
     {
       dev: 'User',
@@ -519,10 +516,11 @@ export async function seedSampleTickets(db: Database, templateId: string): Promi
     '1.0.0',
     TicketStatus.DRAFT,
     {
-      title: 'Adicionar Testes de Integração',
+      ticket_title: 'Adicionar Testes de Integração',
       description: 'Criar testes de integração para repositories com SQLite real.',
-      type: 'Test',
-      priority: 'Média',
+      ticket_type: 'Feature/Implementation',
+      priority: '🟡 P2 Medium',
+      blockers: 'Preciso estudar como fazer testes com SQLite em memória.',
     },
     {
       dev: 'User',
@@ -582,7 +580,7 @@ export async function runSeeds(db: Database): Promise<void> {
       const template = await seedDefaultTemplate(db);
       console.log('✅ Default template created:', template.name);
 
-      // Seed sample tickets
+      // Seed sample tickets (now using correct field IDs matching the template)
       const tickets = await seedSampleTickets(db, template.id);
       console.log(`✅ ${tickets.length} sample tickets created`);
 

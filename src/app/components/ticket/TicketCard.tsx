@@ -22,8 +22,8 @@ interface TicketCardProps {
 }
 
 export function TicketCard({ ticket, onClick, onStatusChange }: TicketCardProps) {
-  const title = ticket.data['title'] || 'Untitled Ticket';
-  const description = ticket.data['description'] || '';
+  const title = ticket.getTitle();
+  const description = ticket.getDescription();
   const hasPriority = ticket.metadata.priority;
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -54,9 +54,18 @@ export function TicketCard({ ticket, onClick, onStatusChange }: TicketCardProps)
     setIsUpdating(true);
     try {
       await onStatusChange(newStatus as TicketStatus);
-      toast.success('Status atualizado com sucesso');
+      toast.success('Status updated successfully');
     } catch (error) {
-      toast.error('Erro ao atualizar status');
+      // Show specific error message for validation failures
+      const errorMessage = error instanceof Error ? error.message : 'Error updating status';
+      
+      // Check if it's a required fields validation error
+      if (errorMessage.includes('required fields')) {
+        toast.error('Cannot complete: fill all required fields');
+      } else {
+        toast.error(errorMessage);
+      }
+      
       console.error(error);
     } finally {
       setIsUpdating(false);

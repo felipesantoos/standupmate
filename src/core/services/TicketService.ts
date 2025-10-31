@@ -11,6 +11,7 @@
 import { Ticket } from '@core/domain/Ticket';
 import { ITicketService } from '@core/interfaces/primary/ITicketService';
 import { ITicketRepository } from '@core/interfaces/secondary/ITicketRepository';
+import { ITemplateService } from '@core/interfaces/primary/ITemplateService';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
 import { TicketStatus } from '@core/domain/types';
 import {
@@ -23,7 +24,10 @@ export class TicketService implements ITicketService {
    * Constructor injection for testability.
    * Depends on INTERFACE, not concrete implementation (DIP).
    */
-  constructor(private readonly repository: ITicketRepository) {}
+  constructor(
+    private readonly repository: ITicketRepository,
+    private readonly templateService: ITemplateService
+  ) {}
 
   async listTickets(filter?: TicketFilter): Promise<Ticket[]> {
     // Simple delegation - repository handles all filter logic
@@ -79,6 +83,19 @@ export class TicketService implements ITicketService {
     // Get ticket
     const ticket = await this.getTicket(id);
 
+    // Get template to validate required fields
+    const template = await this.templateService.getTemplate(ticket.templateId);
+
+    // Validate required fields before marking as completed
+    const validation = ticket.validateRequiredFields(template);
+    if (!validation.isValid) {
+      const missingFieldNames = validation.missingFields.map(f => f.label).join(', ');
+      throw new InvalidOperationException(
+        'mark ticket as completed',
+        `The following required fields are missing: ${missingFieldNames}`
+      );
+    }
+
     // Business operation (domain logic)
     ticket.markAsCompleted();
 
@@ -119,6 +136,20 @@ export class TicketService implements ITicketService {
     // Get ticket
     const ticket = await this.getTicket(id);
 
+    // If status is COMPLETED, validate required fields
+    if (status === TicketStatus.COMPLETED) {
+      const template = await this.templateService.getTemplate(ticket.templateId);
+      const validation = ticket.validateRequiredFields(template);
+      
+      if (!validation.isValid) {
+        const missingFieldNames = validation.missingFields.map(f => f.label).join(', ');
+        throw new InvalidOperationException(
+          'mark ticket as completed',
+          `The following required fields are missing: ${missingFieldNames}`
+        );
+      }
+    }
+
     // Update status directly
     ticket.status = status;
     
@@ -132,6 +163,55 @@ export class TicketService implements ITicketService {
 
     // Save
     return await this.repository.save(ticket);
+  }
+
+  async bulkUpdateTicketStatus(
+    ids: string[],
+    status: TicketStatus
+  ): Promise<{
+    successful: Ticket[];
+    failed: Array<{ id: string; ticket: Ticket; error: string }>;
+  }> {
+    const successful: Ticket[] = [];
+    const failed: Array<{ id: string; ticket: Ticket; error: string }> = [];
+
+    // Process each ticket individually
+    for (const id of ids) {
+      try {
+        const updatedTicket = await this.updateTicketStatus(id, status);
+        successful.push(updatedTicket);
+      } catch (error) {
+        // Capture error and continue processing other tickets
+        try {
+          const ticket = await this.getTicket(id);
+          failed.push({
+            id,
+            ticket,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        } catch (fetchError) {
+          // If we can't even fetch the ticket, create a minimal error entry
+          const dummyTicket = new Ticket(
+            id,
+            '',
+            '',
+            TicketStatus.DRAFT,
+            {},
+            { dev: '' },
+            [],
+            new Date(),
+            new Date()
+          );
+          failed.push({
+            id,
+            ticket: dummyTicket,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+    }
+
+    return { successful, failed };
   }
 
   async countTickets(filter?: TicketFilter): Promise<number> {
@@ -148,29 +228,28 @@ export class TicketService implements ITicketService {
     today: Ticket[];
   }> {
     const now = new Date();
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
+    
+    // Get tickets completed in the last 7 days
+    const weekAgo = new Date(now);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    weekAgo.setHours(0, 0, 0, 0);
 
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-
-    // Filter for completed yesterday
+    // Filter for completed in the last week
     const yesterdayFilter = new TicketFilter(
       TicketStatus.COMPLETED,
       undefined, // Any template
       undefined, // Any tags
-      yesterday, // From yesterday
+      weekAgo, // From 7 days ago
       now // Until now
     );
 
-    // Filter for in progress today
+    // Filter for in progress (regardless of when they were created)
     const todayFilter = new TicketFilter(
       TicketStatus.IN_PROGRESS,
       undefined,
       undefined,
-      today, // From today
-      now
+      undefined, // No date filter - get all in progress tickets
+      undefined
     );
 
     const [yesterdayTickets, todayTickets] = await Promise.all([

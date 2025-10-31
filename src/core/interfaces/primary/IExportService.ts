@@ -8,6 +8,12 @@
 import { Ticket } from '@core/domain/Ticket';
 import { Template } from '@core/domain/Template';
 
+export interface TicketBlocker {
+  ticketId: string;
+  ticketTitle: string;
+  blocker: string;
+}
+
 export interface IExportService {
   /**
    * Export ticket to Markdown format
@@ -51,13 +57,13 @@ export interface IExportService {
    * 
    * @param yesterdayTickets - Tickets completed yesterday
    * @param todayTickets - Tickets in progress today
-   * @param blockers - Identified blockers
+   * @param blockers - Identified blockers with structured data
    * @returns Markdown formatted daily standup
    */
   generateDailyStandup(
     yesterdayTickets: Ticket[],
     todayTickets: Ticket[],
-    blockers: string[]
+    blockers: TicketBlocker[]
   ): string;
 
   /**

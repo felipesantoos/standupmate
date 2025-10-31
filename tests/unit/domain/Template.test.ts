@@ -185,6 +185,177 @@ describe('Template Domain Model', () => {
 
       expect(() => template.validate()).toThrow('Duplicate field ID in section');
     });
+
+    it('should throw error when template has no title field', () => {
+      const template = new Template(
+        'template-1',
+        'Test Template',
+        'Test',
+        '1.0.0',
+        false,
+        [
+          {
+            id: 'section-1',
+            title: 'Test Section',
+            order: 1,
+            fields: [
+              {
+                id: 'description',
+                label: 'Description',
+                type: FieldType.TEXTAREA,
+                required: false,
+                order: 1,
+              },
+            ],
+          },
+        ],
+        new Date(),
+        new Date()
+      );
+
+      expect(() => template.validate()).toThrow('Template must have a required title field');
+    });
+
+    it('should throw error when title field is not required', () => {
+      const template = new Template(
+        'template-1',
+        'Test Template',
+        'Test',
+        '1.0.0',
+        false,
+        [
+          {
+            id: 'section-1',
+            title: 'Test Section',
+            order: 1,
+            fields: [
+              {
+                id: 'ticket_title',
+                label: 'Title',
+                type: FieldType.TEXT,
+                required: false, // Should be required!
+                order: 1,
+              },
+              {
+                id: 'description',
+                label: 'Description',
+                type: FieldType.TEXTAREA,
+                required: false,
+                order: 2,
+              },
+            ],
+          },
+        ],
+        new Date(),
+        new Date()
+      );
+
+      expect(() => template.validate()).toThrow('Template must have a required title field');
+    });
+
+    it('should throw error when template has no description field', () => {
+      const template = new Template(
+        'template-1',
+        'Test Template',
+        'Test',
+        '1.0.0',
+        false,
+        [
+          {
+            id: 'section-1',
+            title: 'Test Section',
+            order: 1,
+            fields: [
+              {
+                id: 'ticket_title',
+                label: 'Title',
+                type: FieldType.TEXT,
+                required: true,
+                order: 1,
+              },
+            ],
+          },
+        ],
+        new Date(),
+        new Date()
+      );
+
+      expect(() => template.validate()).toThrow('Template must have a description field');
+    });
+
+    it('should pass validation when template has title (required) and description (optional)', () => {
+      const template = new Template(
+        'template-1',
+        'Test Template',
+        'Test',
+        '1.0.0',
+        false,
+        [
+          {
+            id: 'section-1',
+            title: 'Test Section',
+            order: 1,
+            fields: [
+              {
+                id: 'ticket_title',
+                label: 'Title',
+                type: FieldType.TEXT,
+                required: true,
+                order: 1,
+              },
+              {
+                id: 'description',
+                label: 'Description',
+                type: FieldType.TEXTAREA,
+                required: false, // Can be optional
+                order: 2,
+              },
+            ],
+          },
+        ],
+        new Date(),
+        new Date()
+      );
+
+      expect(() => template.validate()).not.toThrow();
+    });
+
+    it('should pass validation when description field is also required', () => {
+      const template = new Template(
+        'template-1',
+        'Test Template',
+        'Test',
+        '1.0.0',
+        false,
+        [
+          {
+            id: 'section-1',
+            title: 'Test Section',
+            order: 1,
+            fields: [
+              {
+                id: 'ticket_title',
+                label: 'Title',
+                type: FieldType.TEXT,
+                required: true,
+                order: 1,
+              },
+              {
+                id: 'description',
+                label: 'Description',
+                type: FieldType.TEXTAREA,
+                required: true, // Can also be required
+                order: 2,
+              },
+            ],
+          },
+        ],
+        new Date(),
+        new Date()
+      );
+
+      expect(() => template.validate()).not.toThrow();
+    });
   });
 
   // ===================================================================

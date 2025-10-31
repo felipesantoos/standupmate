@@ -63,6 +63,40 @@ export class Template {
 
     // Validate sections
     this.validateSections();
+
+    // Validate required basic fields
+    this.validateRequiredFields();
+  }
+
+  /**
+   * Validate that template has required basic fields
+   * Private helper method
+   */
+  private validateRequiredFields(): void {
+    // Check if template has a title field (must be required)
+    const hasTitleField = this.sections.some(section =>
+      section.fields.some(field => 
+        (field.id.toLowerCase().includes('title') || 
+         field.label.toLowerCase().includes('title')) &&
+        field.required === true
+      )
+    );
+
+    if (!hasTitleField) {
+      throw new Error('Template must have a required title field');
+    }
+
+    // Check if template has a description field (can be optional)
+    const hasDescriptionField = this.sections.some(section =>
+      section.fields.some(field =>
+        field.id.toLowerCase().includes('description') ||
+        field.label.toLowerCase().includes('description')
+      )
+    );
+
+    if (!hasDescriptionField) {
+      throw new Error('Template must have a description field');
+    }
   }
 
   /**
@@ -333,6 +367,21 @@ export class Template {
       (total, section) => total + section.fields.filter(f => f.required).length,
       0
     );
+  }
+
+  /**
+   * Helper: Get all required fields
+   * Returns array of all required fields across all sections
+   */
+  getRequiredFields(): Field[] {
+    const requiredFields: Field[] = [];
+    
+    for (const section of this.sections) {
+      const sectionRequiredFields = section.fields.filter(f => f.required);
+      requiredFields.push(...sectionRequiredFields);
+    }
+    
+    return requiredFields;
   }
 }
 
