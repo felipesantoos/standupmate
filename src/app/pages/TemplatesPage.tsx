@@ -5,9 +5,11 @@
  * Connected with useTemplates hook.
  */
 
-import { Plus, Star, Copy, Download, Trash2, Edit, Upload, Layout, Store, MoreVertical, Search, Eye, GitBranch } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Star, Copy, Download, Trash2, Edit, Upload, Layout, Store, MoreVertical, Search, Eye, GitBranch, LayoutGrid, Table as TableIcon } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTemplates } from '@app/hooks/useTemplates';
+import { useViewMode } from '@app/hooks/useViewMode';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
 import { Button } from '@app/components/ui/button';
 import { Badge } from '@app/components/ui/badge';
@@ -15,6 +17,9 @@ import { toast } from 'sonner';
 import { ImportTemplateModal } from '@app/components/template/ImportTemplateModal';
 import { TemplateMarketplace } from '@app/components/template/TemplateMarketplace';
 import { TemplatePreviewModal } from '@app/components/template/TemplatePreviewModal';
+import { DataTable } from '@app/components/common/DataTable';
+import { templateColumns } from '@app/components/template/template-columns';
+import { Template } from '@core/domain/Template';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@app/components/ui/empty';
 import { Skeleton } from '@app/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@app/components/ui/tabs';
@@ -67,6 +72,8 @@ export function SkeletonList() {
 }
 
 export function TemplatesPage() {
+  const navigate = useNavigate();
+  
   const [showImportModal, setShowImportModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -75,6 +82,9 @@ export function TemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<{ id: string; name: string } | null>(null);
   const [previewTemplate, setPreviewTemplate] = useState<any | null>(null);
   const [duplicateName, setDuplicateName] = useState('');
+  
+  // View mode (cards or table)
+  const [viewMode, setViewMode] = useViewMode('templates', 'cards');
   
   const { 
     templates, 
@@ -170,6 +180,26 @@ export function TemplatesPage() {
     setPreviewModalOpen(true);
   };
 
+  // Handlers for table view
+  const handleEditTable = useCallback((id: string) => {
+    navigate(`/templates/builder/${id}`);
+  }, [navigate]);
+
+  const handleSetDefaultTable = useCallback(async (id: string) => {
+    try {
+      await setAsDefault(id);
+      toast.success('Template set as default.');
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }, [setAsDefault]);
+
+  const handleDeleteTable = useCallback(async (id: string) => {
+    const template = templates.find(t => t.id === id);
+    if (!template) return;
+    openDeleteDialog(id, template.name);
+  }, [templates]);
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -185,6 +215,30 @@ export function TemplatesPage() {
           </div>
 
           <div className="flex gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex items-center border rounded-md" role="group" aria-label="View mode">
+              <Button
+                variant={viewMode === 'cards' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('cards')}
+                aria-label="Card view"
+                aria-pressed={viewMode === 'cards'}
+                className="rounded-r-none"
+              >
+                <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                aria-label="Table view"
+                aria-pressed={viewMode === 'table'}
+                className="rounded-l-none"
+              >
+                <TableIcon className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </div>
+
             <Button variant="outline" onClick={() => setShowImportModal(true)}>
               <Upload className="w-4 h-4 mr-2" />
               Import
@@ -240,94 +294,109 @@ export function TemplatesPage() {
               />
             )}
 
-            {/* Templates Grid */}
-            {!loading && filteredTemplates.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredTemplates.map(template => (
-                  <Card key={template.id} className="group hover:shadow-lg hover:border-primary/50 transition-all duration-200">
-                    <CardHeader>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="flex items-center gap-2 text-lg">
-                            <span className="truncate">{template.name}</span>
-                            {template.isDefault && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
-                                </TooltipTrigger>
-                                <TooltipContent>Default template</TooltipContent>
-                              </Tooltip>
-                            )}
-                          </CardTitle>
-                          <CardDescription className="mt-1.5 line-clamp-2">
-                            {template.description || 'No description'}
-                          </CardDescription>
-                        </div>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="flex-shrink-0">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuItem onClick={() => openPreviewModal(template)}>
-                              <Eye className="w-4 h-4 mr-2" />
-                              Preview
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => window.location.href = `/templates/builder/${template.id}`}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleCreateNewVersion(template.id, template.name)}>
-                              <GitBranch className="w-4 h-4 mr-2" />
-                              Criar Nova Versão
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openDuplicateDialog(template.id, template.name)}>
-                              <Copy className="w-4 h-4 mr-2" />
-                              Duplicar Template
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {!template.isDefault && (
-                              <DropdownMenuItem onClick={() => handleSetDefault(template.id)}>
-                                <Star className="w-4 h-4 mr-2" />
-                                Set as default
+            {/* Templates - Card or Table View */}
+            {!loading && filteredTemplates.length > 0 && 
+              (viewMode === 'cards' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredTemplates.map(template => (
+                    <Card key={template.id} className="group hover:shadow-lg hover:border-primary/50 transition-all duration-200">
+                      <CardHeader>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                              <span className="truncate">{template.name}</span>
+                              {template.isDefault && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>Default template</TooltipContent>
+                                </Tooltip>
+                              )}
+                            </CardTitle>
+                            <CardDescription className="mt-1.5 line-clamp-2">
+                              {template.description || 'No description'}
+                            </CardDescription>
+                          </div>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="flex-shrink-0">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem onClick={() => openPreviewModal(template)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                Preview
                               </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => handleExport(template.id, template.name)}>
-                              <Download className="w-4 h-4 mr-2" />
-                              Export
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              onClick={() => openDeleteDialog(template.id, template.name)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardHeader>
+                              <DropdownMenuItem onClick={() => window.location.href = `/templates/builder/${template.id}`}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleCreateNewVersion(template.id, template.name)}>
+                                <GitBranch className="w-4 h-4 mr-2" />
+                                Criar Nova Versão
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openDuplicateDialog(template.id, template.name)}>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Duplicar Template
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              {!template.isDefault && (
+                                <DropdownMenuItem onClick={() => handleSetDefault(template.id)}>
+                                  <Star className="w-4 h-4 mr-2" />
+                                  Set as default
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handleExport(template.id, template.name)}>
+                                <Download className="w-4 h-4 mr-2" />
+                                Export
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => openDeleteDialog(template.id, template.name)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </CardHeader>
 
-                    <CardContent>
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-xs">
-                          v{template.version}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {template.sections.length} {template.sections.length === 1 ? 'section' : 'sections'}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {template.getTotalFieldCount()} {template.getTotalFieldCount() === 1 ? 'field' : 'fields'}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      <CardContent>
+                        <div className="flex gap-2 flex-wrap">
+                          <Badge variant="secondary" className="text-xs">
+                            v{template.version}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {template.sections.length} {template.sections.length === 1 ? 'section' : 'sections'}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {template.getTotalFieldCount()} {template.getTotalFieldCount() === 1 ? 'field' : 'fields'}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <DataTable<Template, unknown>
+                  columns={templateColumns}
+                  data={filteredTemplates}
+                  searchKey="name"
+                  searchPlaceholder="Search templates..."
+                  onRowClick={(template) => handleEditTable(template.id)}
+                  meta={{
+                    onEdit: handleEditTable,
+                    onSetDefault: handleSetDefaultTable,
+                    onDelete: handleDeleteTable,
+                  }}
+                />
+              )
             )}
 
             {/* No Results */}
