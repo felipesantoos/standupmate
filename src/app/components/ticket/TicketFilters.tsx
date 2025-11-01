@@ -60,20 +60,31 @@ export function TicketFilters({ filter, onFilterChange }: TicketFiltersProps) {
       {/* Search */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
           <Input
             type="text"
             placeholder="Search tickets..."
             value={filter.search || ''}
             onChange={e => handleSearchChange(e.target.value)}
             className="pl-10"
+            aria-label="Search tickets by title, description, or tags"
+            aria-describedby="search-hint"
           />
+          <span id="search-hint" className="sr-only">
+            Type to filter tickets by keywords
+          </span>
         </div>
 
         {/* Clear Filters */}
         {hasActiveFilters && (
-          <Button size="sm" variant="ghost" onClick={clearFilters}>
-            <X className="w-4 h-4" />
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={clearFilters}
+            aria-label="Clear all filters"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+            <span className="sr-only">Clear filters</span>
           </Button>
         )}
       </div>

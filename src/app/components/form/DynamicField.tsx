@@ -4,6 +4,7 @@
  * Renders form fields dynamically based on field type.
  */
 
+import { memo, useState, useEffect } from 'react';
 import { Field, FieldType } from '@core/domain/types';
 import { Input } from '@app/components/ui/input';
 import { Textarea } from '@app/components/ui/textarea';
@@ -12,7 +13,6 @@ import { Checkbox } from '@app/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@app/components/ui/radio-group';
 import { Label } from '@app/components/ui/label';
 import { MarkdownEditor } from '@app/components/ui/markdown-editor';
-import { useState, useEffect } from 'react';
 
 interface DynamicFieldProps {
   field: Field;
@@ -21,7 +21,7 @@ interface DynamicFieldProps {
   error?: string;
 }
 
-export function DynamicField({ field, value, onChange, error }: DynamicFieldProps) {
+const DynamicFieldComponent = ({ field, value, onChange, error }: DynamicFieldProps) => {
   const [localValue, setLocalValue] = useState(value);
 
   // Sync local value with prop value
@@ -190,5 +190,20 @@ export function DynamicField({ field, value, onChange, error }: DynamicFieldProp
       )}
     </div>
   );
-}
+};
+
+/**
+ * Memoized DynamicField
+ * 
+ * Only re-renders if field config, value, or error changes
+ */
+export const DynamicField = memo(DynamicFieldComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.field.id === nextProps.field.id &&
+    prevProps.value === nextProps.value &&
+    prevProps.error === nextProps.error
+  );
+});
+
+DynamicField.displayName = 'DynamicField';
 

@@ -163,11 +163,11 @@ export function TicketsPage() {
   };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div role="main" aria-label="Tickets page">
+      <header className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Tickets</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1" aria-live="polite">
             {totalCount > 0
               ? `${totalCount} ticket${totalCount > 1 ? 's' : ''} ${filter.hasAnyFilter() ? 'found' : 'total'}`
               : 'Manage your work tickets'}
@@ -175,42 +175,52 @@ export function TicketsPage() {
         </div>
 
         <Link to="/tickets/new">
-          <Button size="default">
-            <Plus className="w-5 h-5" />
+          <Button size="default" aria-label="Create new ticket">
+            <Plus className="w-5 h-5" aria-hidden="true" />
             New Ticket
           </Button>
         </Link>
-      </div>
+      </header>
 
-      {/* Filters */}
-      <div className="mb-6">
+      {/* Filters Section */}
+      <section aria-label="Ticket filters" className="mb-6">
         <TicketFilters filter={filter} onFilterChange={setFilter} />
-      </div>
+      </section>
 
-      {/* Ticket List */}
-      <TicketList
-        tickets={tickets}
-        loading={loading}
-        emptyMessage={
-          filter.hasAnyFilter()
-            ? 'No tickets found with these filters'
-            : 'No tickets created yet. Click "New Ticket" to get started.'
-        }
-        selectedTickets={selectedTickets}
-        onSelectionChange={setSelectedTickets}
-        onStatusChange={handleStatusChange}
-      />
+      {/* Ticket List Section */}
+      <section aria-label="Ticket list" aria-busy={loading}>
+        {loading && (
+          <div role="status" aria-live="polite">
+            <span className="sr-only">Loading tickets...</span>
+          </div>
+        )}
+        
+        <TicketList
+          tickets={tickets}
+          loading={loading}
+          emptyMessage={
+            filter.hasAnyFilter()
+              ? 'No tickets found with these filters'
+              : 'No tickets created yet. Click "New Ticket" to get started.'
+          }
+          selectedTickets={selectedTickets}
+          onSelectionChange={setSelectedTickets}
+          onStatusChange={handleStatusChange}
+        />
+      </section>
 
       {/* Batch Actions */}
-      <BatchActions
-        selectedCount={selectedTickets.length}
-        onExport={handleBatchExport}
-        onDelete={handleBatchDelete}
-        onArchive={handleBatchArchive}
-        onMarkComplete={handleBatchComplete}
-        onClearSelection={() => setSelectedTickets([])}
-        onStatusChange={handleBulkStatusChange}
-      />
+      {selectedTickets.length > 0 && (
+        <BatchActions
+          selectedCount={selectedTickets.length}
+          onExport={handleBatchExport}
+          onDelete={handleBatchDelete}
+          onArchive={handleBatchArchive}
+          onMarkComplete={handleBatchComplete}
+          onClearSelection={() => setSelectedTickets([])}
+          onStatusChange={handleBulkStatusChange}
+        />
+      )}
 
       {/* Bulk Update Result Modal */}
       <BulkUpdateResultModal

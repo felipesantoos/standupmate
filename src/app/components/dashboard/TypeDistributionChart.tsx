@@ -4,6 +4,7 @@
  * Pie chart showing ticket distribution by type.
  */
 
+import { memo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
 import { Skeleton } from '@app/components/ui/skeleton';
@@ -24,7 +25,7 @@ const COLORS = [
   'hsl(0 0% 35%)',               // Darker
 ];
 
-export function TypeDistributionChart({ data, loading }: TypeDistributionChartProps) {
+const TypeDistributionChartComponent = ({ data, loading }: TypeDistributionChartProps) => {
   if (loading) {
     return (
       <Card>
@@ -112,5 +113,12 @@ export function TypeDistributionChart({ data, loading }: TypeDistributionChartPr
       </CardContent>
     </Card>
   );
-}
+};
+
+/**
+ * Memoized TypeDistributionChart
+ */
+export const TypeDistributionChart = memo(TypeDistributionChartComponent);
+
+TypeDistributionChart.displayName = 'TypeDistributionChart';
 

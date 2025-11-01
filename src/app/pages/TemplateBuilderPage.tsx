@@ -6,7 +6,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Template } from '@core/domain/Template';
 import { Section, Field, FieldType } from '@core/domain/types';
 import { useTemplates } from '@app/hooks/useTemplates';
@@ -477,6 +477,56 @@ export function TemplateBuilderPage() {
       toast.error((error as Error).message);
     }
   };
+
+  // Keyboard shortcuts handler
+  const handleKeyboardShortcuts = useCallback((e: KeyboardEvent) => {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const modifier = isMac ? e.metaKey : e.ctrlKey;
+    
+    // Ctrl/Cmd + S: Save
+    if (modifier && e.key === 's') {
+      e.preventDefault();
+      handleSave();
+      return;
+    }
+    
+    // Ctrl/Cmd + P: Toggle Preview
+    if (modifier && e.key === 'p') {
+      e.preventDefault();
+      setShowPreviewModal(true);
+      return;
+    }
+    
+    // Ctrl/Cmd + Shift + F: Add Field
+    if (modifier && e.shiftKey && e.key === 'F') {
+      e.preventDefault();
+      // Add new field to first section
+      if (template && template.sections.length > 0) {
+        addField(template.sections[0].id);
+      }
+      return;
+    }
+    
+    // Ctrl/Cmd + Shift + S: Add Section
+    if (modifier && e.shiftKey && e.key === 'S') {
+      e.preventDefault();
+      addSection();
+      return;
+    }
+    
+    // Escape: Close preview modal
+    if (e.key === 'Escape' && showPreviewModal) {
+      e.preventDefault();
+      setShowPreviewModal(false);
+      return;
+    }
+  }, [handleSave, showPreviewModal, template, addField, addSection]);
+
+  // Register keyboard shortcuts listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => document.removeEventListener('keydown', handleKeyboardShortcuts);
+  }, [handleKeyboardShortcuts]);
 
   if (!template) {
     return <PageSpinner />;

@@ -2,8 +2,10 @@
  * Ticket List Component
  * 
  * Displays list of tickets.
+ * Memoized for performance optimization.
  */
 
+import { memo, useState, useEffect, useCallback, useRef } from 'react';
 import { Ticket } from '@core/domain/Ticket';
 import { TicketCard } from './TicketCard';
 import { Skeleton } from '@app/components/ui/skeleton';
@@ -12,6 +14,7 @@ import { Checkbox } from '@app/components/ui/checkbox';
 import { Label } from '@app/components/ui/label';
 import { Button } from '@app/components/ui/button';
 import { FileText, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function SkeletonList() {
   return (
@@ -64,14 +67,19 @@ interface TicketListProps {
   onStatusChange?: (ticketId: string, status: any) => Promise<void>;
 }
 
-export function TicketList({ 
+const TicketListComponent = ({ 
   tickets, 
   loading = false, 
   emptyMessage = 'Nenhum ticket encontrado',
   selectedTickets = [],
   onSelectionChange,
   onStatusChange,
-}: TicketListProps) {
+}: TicketListProps) => {
+  const navigate = useNavigate();
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const ticketRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const listRef = useRef<HTMLDivElement>(null);
+
   const toggleSelection = (ticketId: string) => {
     if (!onSelectionChange) return;
     
@@ -91,6 +99,64 @@ export function TicketList({
       onSelectionChange(tickets.map((t) => t.id));
     }
   };
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (tickets.length === 0) return;
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedIndex(prev => 
+          prev < tickets.length - 1 ? prev + 1 : prev
+        );
+        break;
+      
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedIndex(prev => prev > 0 ? prev - 1 : 0);
+        break;
+      
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (focusedIndex >= 0 && focusedIndex < tickets.length) {
+          const ticket = tickets[focusedIndex];
+          navigate(`/tickets/${ticket.id}`);
+        }
+        break;
+      
+      case 'Home':
+        e.preventDefault();
+        setFocusedIndex(0);
+        break;
+      
+      case 'End':
+        e.preventDefault();
+        setFocusedIndex(tickets.length - 1);
+        break;
+    }
+  }, [focusedIndex, tickets, navigate]);
+
+  // Focus element when index changes
+  useEffect(() => {
+    if (focusedIndex >= 0 && ticketRefs.current[focusedIndex]) {
+      ticketRefs.current[focusedIndex]?.focus();
+      ticketRefs.current[focusedIndex]?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+      });
+    }
+  }, [focusedIndex]);
+
+  // Register keyboard listener
+  useEffect(() => {
+    const element = listRef.current;
+    if (!element) return;
+    
+    element.addEventListener('keydown', handleKeyDown as any);
+    return () => element.removeEventListener('keydown', handleKeyDown as any);
+  }, [handleKeyDown]);
   if (loading) {
     return <SkeletonList />;
   }
@@ -135,9 +201,23 @@ export function TicketList({
       )}
 
       {/* Tickets */}
-      <div className="grid gap-4">
-        {tickets.map((ticket) => (
-          <div key={ticket.id} className="flex items-center gap-3 group/checkbox">
+      <div 
+        ref={listRef}
+        className="grid gap-4"
+        role="list"
+        aria-label="Ticket list"
+        tabIndex={0}
+      >
+        {tickets.map((ticket, index) => (
+          <div 
+            key={ticket.id} 
+            ref={el => ticketRefs.current[index] = el}
+            tabIndex={index === focusedIndex ? 0 : -1}
+            role="listitem"
+            className={`flex items-center gap-3 group/checkbox ${
+              index === focusedIndex ? 'ring-2 ring-primary ring-offset-2 rounded-xl' : ''
+            }`}
+          >
             {onSelectionChange && (
               <Checkbox
                 id={`ticket-${ticket.id}`}
@@ -159,5 +239,14 @@ export function TicketList({
       </div>
     </div>
   );
-}
+};
+
+/**
+ * Memoized TicketList
+ * 
+ * Only re-renders if tickets array or loading state changes
+ */
+export const TicketList = memo(TicketListComponent);
+
+TicketList.displayName = 'TicketList';
 

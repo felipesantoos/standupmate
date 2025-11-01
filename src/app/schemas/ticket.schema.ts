@@ -44,7 +44,7 @@ export function createTicketSchema(template: Template) {
           if (field.validation?.pattern) {
             stringSchema = stringSchema.regex(
               new RegExp(field.validation.pattern),
-              field.validation.message || 'Invalid format'
+              'Invalid format'
             );
           }
           fieldSchema = stringSchema;

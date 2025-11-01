@@ -2,8 +2,10 @@
  * Productivity Chart Component
  * 
  * Shows tickets created and completed per day.
+ * Memoized for performance.
  */
 
+import { memo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
 import { Skeleton } from '@app/components/ui/skeleton';
@@ -14,7 +16,7 @@ interface ProductivityChartProps {
   loading?: boolean;
 }
 
-export function ProductivityChart({ data, loading }: ProductivityChartProps) {
+const ProductivityChartComponent = ({ data, loading }: ProductivityChartProps) => {
   if (loading) {
     return (
       <Card>
@@ -95,5 +97,12 @@ export function ProductivityChart({ data, loading }: ProductivityChartProps) {
       </CardContent>
     </Card>
   );
-}
+};
+
+/**
+ * Memoized ProductivityChart
+ */
+export const ProductivityChart = memo(ProductivityChartComponent);
+
+ProductivityChart.displayName = 'ProductivityChart';
 

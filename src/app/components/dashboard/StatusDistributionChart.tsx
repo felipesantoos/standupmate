@@ -2,9 +2,11 @@
  * Status Distribution Chart Component
  * 
  * Bar chart showing ticket distribution by status.
+ * Memoized for performance.
  */
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { memo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@app/components/ui/card';
 import { Skeleton } from '@app/components/ui/skeleton';
 import { StatusDistribution } from '@core/services/AnalyticsService';
@@ -22,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
   'Archived': 'hsl(var(--muted))',
 };
 
-export function StatusDistributionChart({ data, loading }: StatusDistributionChartProps) {
+const StatusDistributionChartComponent = ({ data, loading }: StatusDistributionChartProps) => {
   
   if (loading || !data || data.length === 0) {
     return (
@@ -100,5 +102,12 @@ export function StatusDistributionChart({ data, loading }: StatusDistributionCha
       </CardContent>
     </Card>
   );
-}
+};
+
+/**
+ * Memoized StatusDistributionChart
+ */
+export const StatusDistributionChart = memo(StatusDistributionChartComponent);
+
+StatusDistributionChart.displayName = 'StatusDistributionChart';
 

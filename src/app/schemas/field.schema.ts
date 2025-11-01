@@ -19,7 +19,6 @@ export const fieldValidationSchema = z.object({
   min: z.number().optional(),
   max: z.number().optional(),
   pattern: z.string().optional(),
-  message: z.string().optional(),
   minItems: z.number().int().positive().optional(),
   maxItems: z.number().int().positive().optional(),
 }).optional();

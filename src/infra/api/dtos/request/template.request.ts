@@ -51,7 +51,6 @@ export interface FieldRequest {
     min?: number;
     max?: number;
     pattern?: string;
-    message?: string;
     min_items?: number;
     max_items?: number;
   };
