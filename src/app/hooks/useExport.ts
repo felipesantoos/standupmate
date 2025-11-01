@@ -2,13 +2,14 @@
  * useExport Hook
  * 
  * Custom hook for export operations.
+ * Uses ExportService via DI Container.
  */
 
 import { useState } from 'react';
 import { Ticket } from '@core/domain/Ticket';
 import { Template } from '@core/domain/Template';
 import { TicketBlocker } from '@core/interfaces/primary/IExportService';
-import { createExportService } from '@/lib/serviceFactory';
+import { diContainer } from '@app/dicontainer/dicontainer';
 
 interface UseExportResult {
   exportTicketToMarkdown: (ticket: Ticket, template: Template) => Promise<string>;
@@ -32,6 +33,9 @@ export function useExport(): UseExportResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // Get service from DI Container
+  const service = diContainer.exportService;
+
   /**
    * Export ticket to Markdown
    */
@@ -43,7 +47,6 @@ export function useExport(): UseExportResult {
       setLoading(true);
       setError(null);
 
-      const service = await createExportService();
       const markdown = service.exportTicketToMarkdown(ticket, template);
 
       return markdown;
@@ -63,7 +66,6 @@ export function useExport(): UseExportResult {
       setLoading(true);
       setError(null);
 
-      const service = await createExportService();
       const json = service.exportTicketToJSON(ticket);
 
       return json;
@@ -86,7 +88,6 @@ export function useExport(): UseExportResult {
       setLoading(true);
       setError(null);
 
-      const service = await createExportService();
       const results = await service.exportTicketsToMarkdown(tickets, templates);
 
       return results;
@@ -110,7 +111,6 @@ export function useExport(): UseExportResult {
       setLoading(true);
       setError(null);
 
-      const service = await createExportService();
       const markdown = service.generateDailyStandup(yesterdayTickets, todayTickets, blockers);
 
       return markdown;
@@ -130,7 +130,6 @@ export function useExport(): UseExportResult {
       setLoading(true);
       setError(null);
 
-      const service = await createExportService();
       const json = await service.exportDatabaseAsJSON();
 
       return json;

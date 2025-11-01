@@ -6,9 +6,9 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { TicketProvider } from './store/TicketContext';
-import { TemplateProvider } from './store/TemplateContext';
-import { ThemeProvider } from './store/ThemeContext';
+import { TicketProvider } from './contexts/TicketContext';
+import { TemplateProvider } from './contexts/TemplateContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { MainLayout } from './components/layouts/MainLayout';
 // CommandPalette temporarily disabled - will be recreated with shadcn Command
 // import { CommandPalette } from './components/command/CommandPalette';

@@ -7,7 +7,7 @@
 
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTickets } from '@app/hooks/useTickets';
 import { useTemplates } from '@app/hooks/useTemplates';
 import { useExport } from '@app/hooks/useExport';
@@ -23,14 +23,33 @@ import { Button } from '@app/components/ui/button';
 import { Separator } from '@app/components/ui/separator';
 
 export function TicketsPage() {
+  // Local UI state
   const [filter, setFilter] = useState<TicketFilter>(new TicketFilter());
   const [selectedTickets, setSelectedTickets] = useState<string[]>([]);
   const [bulkUpdateFailed, setBulkUpdateFailed] = useState<Array<{ id: string; ticket: Ticket; error: string }>>([]);
   const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
   
-  const { tickets, loading, error, totalCount, deleteTicket, markAsCompleted, archiveTicket, updateTicketStatus, bulkUpdateTicketStatus } = useTickets(filter);
+  // Context (Primary Adapter) - todas as operações vêm daqui
+  const {
+    tickets,
+    loading,
+    error,
+    totalCount,
+    fetchTickets,
+    deleteTicket,
+    markAsCompleted,
+    archiveTicket,
+    updateTicketStatus,
+    bulkUpdateTicketStatus,
+  } = useTickets();
+  
   const { templates } = useTemplates();
   const { exportTicketsToMarkdown, downloadAsFile } = useExport();
+
+  // Fetch tickets when filter changes
+  useEffect(() => {
+    fetchTickets(filter);
+  }, [fetchTickets, JSON.stringify(filter)]); // Re-fetch quando filter mudar
 
   // Batch export
   const handleBatchExport = async () => {

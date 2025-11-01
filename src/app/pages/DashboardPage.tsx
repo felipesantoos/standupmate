@@ -5,12 +5,14 @@
  * Connected with hooks.
  */
 
-import { useMemo } from 'react';
-import { useTickets, useDailyStandupTickets } from '@app/hooks/useTickets';
+import { useMemo, useEffect, useState } from 'react';
+import { useDailyStandupTickets } from '@app/hooks/useTickets';
 import { useAnalytics } from '@app/hooks/useAnalytics';
 import { TicketStatus } from '@core/domain/types';
 import { TicketFilter } from '@core/services/filters/TicketFilter';
 import { TicketBlocker } from '@core/interfaces/primary/IExportService';
+import { Ticket } from '@core/domain/Ticket';
+import { diContainer } from '@app/dicontainer/dicontainer';
 import { MetricsCards } from '@app/components/dashboard/MetricsCards';
 import { DailyStandupCard } from '@app/components/dashboard/DailyStandupCard';
 import { ProductivityChart } from '@app/components/dashboard/ProductivityChart';
@@ -18,32 +20,60 @@ import { TypeDistributionChart } from '@app/components/dashboard/TypeDistributio
 import { StatusDistributionChart } from '@app/components/dashboard/StatusDistributionChart';
 
 export function DashboardPage() {
-  // Memoize filters to prevent infinite rerenders
-  const allTicketsFilter = useMemo(() => new TicketFilter(), []);
-  const inProgressFilter = useMemo(() => new TicketFilter(TicketStatus.IN_PROGRESS), []);
-  const draftFilter = useMemo(() => new TicketFilter(TicketStatus.DRAFT), []);
-  const completedThisWeekFilter = useMemo(
-    () => new TicketFilter(
-      TicketStatus.COMPLETED,
-      undefined,
-      undefined,
-      getWeekStart(),
-      new Date()
-    ),
-    []
-  );
+  // Local state for dashboard metrics
+  const [allTickets, setAllTickets] = useState<Ticket[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [inProgressCount, setInProgressCount] = useState(0);
+  const [draftCount, setDraftCount] = useState(0);
+  const [completedThisWeek, setCompletedThisWeek] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // Get all tickets for analytics
-  const { tickets: allTickets } = useTickets(allTicketsFilter, true);
+  // Get service from DI Container for dashboard-specific queries
+  const ticketService = diContainer.ticketService;
 
-  // Get stats
-  const { totalCount: inProgressCount } = useTickets(inProgressFilter, true);
-  const { totalCount: completedThisWeek } = useTickets(completedThisWeekFilter, true);
-  const { totalCount: draftCount } = useTickets(draftFilter, true);
-  const { totalCount } = useTickets(allTicketsFilter, true);
+  // Load dashboard data on mount
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      setLoading(true);
+      try {
+        // Create filters
+        const allTicketsFilter = new TicketFilter();
+        const inProgressFilter = new TicketFilter(TicketStatus.IN_PROGRESS);
+        const draftFilter = new TicketFilter(TicketStatus.DRAFT);
+        const completedThisWeekFilter = new TicketFilter(
+          TicketStatus.COMPLETED,
+          undefined,
+          undefined,
+          getWeekStart(),
+          new Date()
+        );
 
-  // Daily standup data
-  const { yesterdayTickets, todayTickets, loading } = useDailyStandupTickets();
+        // Fetch all data in parallel
+        const [all, total, inProgress, draft, completedWeek] = await Promise.all([
+          ticketService.listTickets(allTicketsFilter),
+          ticketService.countTickets(allTicketsFilter),
+          ticketService.countTickets(inProgressFilter),
+          ticketService.countTickets(draftFilter),
+          ticketService.countTickets(completedThisWeekFilter),
+        ]);
+
+        setAllTickets(all);
+        setTotalCount(total);
+        setInProgressCount(inProgress);
+        setDraftCount(draft);
+        setCompletedThisWeek(completedWeek);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, [ticketService]);
+
+  // Daily standup data (uses specialized hook)
+  const { yesterdayTickets, todayTickets, loading: standupLoading } = useDailyStandupTickets();
 
   // Extract blockers from today's tickets
   const blockers = useMemo(() => {
@@ -81,7 +111,7 @@ export function DashboardPage() {
         completedThisWeek={completedThisWeek}
         totalCount={totalCount}
         draftCount={draftCount}
-        loading={loading}
+        loading={loading || standupLoading}
       />
 
       {/* Charts */}

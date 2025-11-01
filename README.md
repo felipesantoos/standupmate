@@ -21,37 +21,63 @@ Sistema flexível e dinâmico para rastreamento de trabalho, permitindo planejar
 
 ## 🏗️ Arquitetura
 
-Este projeto segue **Arquitetura Hexagonal (Ports & Adapters)** com **SOLID Principles**.
+Este projeto segue **Arquitetura Hexagonal (Ports & Adapters)** com **SOLID Principles**, alinhado 100% com os padrões do projeto Colabora.
 
 ```
 src/
-├── core/                    # DOMAIN + BUSINESS LOGIC
-│   ├── domain/             # Pure domain models
-│   ├── interfaces/         # Ports (abstractions)
-│   │   ├── primary/        # Service interfaces
-│   │   └── secondary/      # Repository interfaces
-│   ├── services/           # Business logic
-│   └── exceptions/         # Domain exceptions
+├── core/                    # 🎯 DOMAIN LAYER (Hexagon Center)
+│   ├── domain/             # Entidades de negócio puras
+│   │   ├── Ticket.ts       # Modelo de Ticket
+│   │   ├── Template.ts     # Modelo de Template
+│   │   └── types.ts        # Types compartilhados
+│   ├── interfaces/         # Ports (abstrações)
+│   │   ├── primary/        # 🔵 Primary Ports (Use Cases)
+│   │   └── secondary/      # 🟢 Secondary Ports (Data Access)
+│   ├── services/           # Lógica de aplicação
+│   └── exceptions/         # Exceções de domínio
 │
-├── infra/                  # INFRASTRUCTURE (Adapters)
-│   └── database/           # SQLite adapter
-│       ├── repositories/   # Repository implementations
-│       └── mappers/        # DB ↔ Domain mappers
+├── infra/                  # 🔌 INFRASTRUCTURE LAYER (Secondary Adapters)
+│   └── database/
+│       ├── repositories/   # SQLite implementations
+│       ├── mappers/        # Domain ↔ DB transformations
+│       ├── sqlite.ts       # Database client
+│       └── seed.ts         # Database seeds
 │
-└── app/                    # APPLICATION (UI)
-    ├── components/         # React components
-    ├── pages/              # Page components
-    ├── hooks/              # Custom hooks
-    └── store/              # Context API state
+└── app/                    # 🖥️ APPLICATION LAYER (Primary Adapters)
+    ├── dicontainer/       # ✨ Dependency Injection
+    │   └── dicontainer.ts # Singleton DI Container
+    ├── contexts/          # React Contexts (Primary Adapters)
+    │   ├── TicketContext.tsx
+    │   └── TemplateContext.tsx
+    ├── hooks/             # Custom React hooks
+    │   ├── useTickets.ts  # Consome TicketContext
+    │   └── useTemplates.ts
+    ├── components/        # React components
+    └── pages/             # Page components
+```
+
+### Fluxo de Dados
+
+```
+Component → Hook → Context (Primary Adapter) → Service → Repository (Secondary Adapter) → Database
 ```
 
 ### Princípios SOLID Aplicados
 
-- **Single Responsibility**: Cada classe tem uma responsabilidade
-- **Open/Closed**: Extensível via novos adapters
-- **Liskov Substitution**: Repositories intercambiáveis
-- **Interface Segregation**: Interfaces focadas
-- **Dependency Inversion**: Depende de abstrações
+- ✅ **Single Responsibility**: Cada camada tem uma responsabilidade clara
+- ✅ **Open/Closed**: Extensível via novos adapters sem modificar core
+- ✅ **Liskov Substitution**: Repositories intercambiáveis via interfaces
+- ✅ **Interface Segregation**: Interfaces focadas e específicas
+- ✅ **Dependency Inversion**: Services dependem de abstrações, não implementações
+
+### Dependency Injection
+
+- **DI Container síncrono** gerencia services e repositories
+- **Lazy initialization** - services criados apenas quando necessários
+- **Singleton pattern** - uma instância por service
+- **Fácil de testar** - mock do container em testes
+
+📚 **Documentação completa:** [HEXAGONAL_ARCHITECTURE.md](./docs/HEXAGONAL_ARCHITECTURE.md)
 
 ---
 
@@ -275,13 +301,33 @@ Domain Layer escrito UMA VEZ, usado em:
 
 ---
 
-## 📖 Referências
+## 📚 Documentação
 
-Baseado nos guias de arquitetura:
-- SOLID Principles
-- Clean Architecture
-- Hexagonal Architecture (Ports & Adapters)
-- Design Patterns (Repository, Service, Mapper, Factory, Filter)
+### Arquitetura
+
+- **[HEXAGONAL_ARCHITECTURE.md](./docs/HEXAGONAL_ARCHITECTURE.md)** - Guia completo da arquitetura hexagonal
+  - Estrutura de camadas
+  - Fluxo de dados
+  - Dependency Injection Container
+  - Padrões e convenções
+  - Exemplos práticos
+
+### Features
+
+- **[IMPLEMENTATION_PLAN.md](./docs/IMPLEMENTATION_PLAN.md)** - Plano geral de implementação
+- **[features/](./docs/features/)** - Especificações detalhadas de cada feature
+  - 13 documentos com planos step-by-step
+  - Estruturas de dados
+  - Casos de uso
+  - Critérios de aceite
+
+### Referências
+
+Baseado nos guias de arquitetura do projeto Colabora:
+- **Hexagonal Architecture** (Ports & Adapters)
+- **SOLID Principles**
+- **Clean Architecture**
+- **Design Patterns** (Repository, Service, Mapper, DI, Filter)
 
 ---
 

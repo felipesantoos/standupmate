@@ -25,7 +25,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '../ui/sidebar';
-import { useTheme } from '@app/store/ThemeContext';
+import { useTheme } from '@app/contexts/ThemeContext';
 
 // Navigation data
 const mainNavItems = [
