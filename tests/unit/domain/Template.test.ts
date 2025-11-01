@@ -24,11 +24,18 @@ describe('Template Domain Model', () => {
           order: 1,
           fields: [
             {
-              id: 'field-1',
+              id: 'ticket_title',
               label: 'Title',
               type: FieldType.TEXT,
               required: true,
               order: 1,
+            },
+            {
+              id: 'description',
+              label: 'Description',
+              type: FieldType.TEXTAREA,
+              required: false,
+              order: 2,
             },
           ],
         },
@@ -493,17 +500,17 @@ describe('Template Domain Model', () => {
     it('should add field to section', () => {
       const template = createValidTemplate();
       const newField: Field = {
-        id: 'field-2',
-        label: 'Description',
-        type: FieldType.TEXTAREA,
+        id: 'field-3',
+        label: 'Extra Field',
+        type: FieldType.TEXT,
         required: false,
-        order: 2,
+        order: 3,
       };
 
       template.addFieldToSection('section-1', newField);
 
-      expect(template.sections[0].fields.length).toBe(2);
-      expect(template.sections[0].fields[1]).toBe(newField);
+      expect(template.sections[0].fields.length).toBe(3);
+      expect(template.sections[0].fields[2]).toBe(newField);
     });
 
     it('should throw error when section not found', () => {
@@ -524,15 +531,15 @@ describe('Template Domain Model', () => {
     it('should throw error when adding field with duplicate ID', () => {
       const template = createValidTemplate();
       const duplicateField: Field = {
-        id: 'field-1', // Duplicate!
+        id: 'ticket_title', // Duplicate!
         label: 'Duplicate',
         type: FieldType.TEXT,
         required: true,
-        order: 2,
+        order: 3,
       };
 
       expect(() => template.addFieldToSection('section-1', duplicateField)).toThrow(
-        'Field with ID field-1 already exists in section section-1'
+        'Field with ID ticket_title already exists in section section-1'
       );
     });
   });
@@ -568,8 +575,12 @@ describe('Template Domain Model', () => {
 
     it('should throw error when removing last field', () => {
       const template = createValidTemplate();
-
-      expect(() => template.removeFieldFromSection('section-1', 'field-1')).toThrow(
+      
+      // Remove first field
+      template.removeFieldFromSection('section-1', 'ticket_title');
+      
+      // Now try to remove the last remaining field
+      expect(() => template.removeFieldFromSection('section-1', 'description')).toThrow(
         'Cannot remove the last field'
       );
     });

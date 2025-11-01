@@ -25,10 +25,10 @@ vi.mock('@app/dicontainer/dicontainer', () => ({
       markAsCompleted: vi.fn(),
       archiveTicket: vi.fn(),
       updateTicketStatus: vi.fn(),
-      bulkUpdateStatus: vi.fn(),
+      bulkUpdateTicketStatus: vi.fn(), // Fixed: was bulkUpdateStatus
       getDailyStandupTickets: vi.fn(),
       getTicketStats: vi.fn(),
-      countTickets: vi.fn(), // Added missing method
+      countTickets: vi.fn(),
     },
   },
 }));
@@ -83,22 +83,18 @@ describe('TicketContext', () => {
         expect(result.current.loading).toBe(false);
       });
 
-      // Assert: error state
-      expect(result.current.error).toBe('Error loading tickets');
+      // Assert: error state (uses err.message when err is instanceof Error)
+      expect(result.current.error).toBe('Failed to fetch tickets');
     });
   });
 
   describe('createTicket', () => {
-    it('should create ticket and refetch list', async () => {
+    it('should create ticket and update local state', async () => {
       const newTicket = new Ticket('3', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'New Ticket' }, { dev: 'Felipe' }, [], new Date(), new Date());
 
       vi.mocked(diContainer.ticketService.createTicket).mockResolvedValue(newTicket);
-      vi.mocked(diContainer.ticketService.listTickets)
-        .mockResolvedValueOnce([]) // Initial load
-        .mockResolvedValueOnce([newTicket]); // After create
-      vi.mocked(diContainer.ticketService.countTickets)
-        .mockResolvedValueOnce(0)
-        .mockResolvedValueOnce(1);
+      vi.mocked(diContainer.ticketService.listTickets).mockResolvedValue([]); // Initial load
+      vi.mocked(diContainer.ticketService.countTickets).mockResolvedValue(0);
 
       const { result } = renderHook(() => useTicketContext(), { wrapper });
 
@@ -122,12 +118,14 @@ describe('TicketContext', () => {
         })
       );
 
-      // Assert: list was refetched
-      expect(diContainer.ticketService.listTickets).toHaveBeenCalledTimes(2);
+      // Assert: list was NOT refetched (context updates local state)
+      expect(diContainer.ticketService.listTickets).toHaveBeenCalledTimes(1);
 
-      // Assert: state updated
+      // Assert: state updated locally
       await waitFor(() => {
         expect(result.current.tickets).toHaveLength(1);
+        expect(result.current.tickets[0].id).toBe('3');
+        expect(result.current.totalCount).toBe(1);
       });
     });
 
@@ -155,15 +153,12 @@ describe('TicketContext', () => {
   });
 
   describe('updateTicket', () => {
-    it('should update ticket and refetch', async () => {
+    it('should update ticket and update local state', async () => {
       const initialTicket = new Ticket('1', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'Original' }, { dev: 'Felipe' }, [], new Date(), new Date());
       const updatedTicket = new Ticket('1', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'Updated' }, { dev: 'Felipe' }, [], new Date(), new Date());
 
-      vi.mocked(diContainer.ticketService.listTickets)
-        .mockResolvedValueOnce([initialTicket])
-        .mockResolvedValueOnce([updatedTicket]);
-      vi.mocked(diContainer.ticketService.countTickets)
-        .mockResolvedValue(1);
+      vi.mocked(diContainer.ticketService.listTickets).mockResolvedValue([initialTicket]);
+      vi.mocked(diContainer.ticketService.countTickets).mockResolvedValue(1);
       vi.mocked(diContainer.ticketService.updateTicket).mockResolvedValue(updatedTicket);
 
       const { result } = renderHook(() => useTicketContext(), { wrapper });
@@ -176,20 +171,23 @@ describe('TicketContext', () => {
       });
 
       expect(diContainer.ticketService.updateTicket).toHaveBeenCalledWith('1', { title: 'Updated' });
-      expect(diContainer.ticketService.listTickets).toHaveBeenCalledTimes(2);
+      
+      // Assert: list was NOT refetched (context updates local state)
+      expect(diContainer.ticketService.listTickets).toHaveBeenCalledTimes(1);
+      
+      // Assert: state updated locally
+      await waitFor(() => {
+        expect(result.current.tickets[0].data.title).toBe('Updated');
+      });
     });
   });
 
   describe('deleteTicket', () => {
-    it('should delete ticket and refetch', async () => {
+    it('should delete ticket and update local state', async () => {
       const mockTicket = new Ticket('1', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'To Delete' }, { dev: 'Felipe' }, [], new Date(), new Date());
 
-      vi.mocked(diContainer.ticketService.listTickets)
-        .mockResolvedValueOnce([mockTicket])
-        .mockResolvedValueOnce([]);
-      vi.mocked(diContainer.ticketService.countTickets)
-        .mockResolvedValueOnce(1)
-        .mockResolvedValueOnce(0);
+      vi.mocked(diContainer.ticketService.listTickets).mockResolvedValue([mockTicket]);
+      vi.mocked(diContainer.ticketService.countTickets).mockResolvedValue(1);
       vi.mocked(diContainer.ticketService.deleteTicket).mockResolvedValue(undefined);
 
       const { result } = renderHook(() => useTicketContext(), { wrapper });
@@ -212,14 +210,17 @@ describe('TicketContext', () => {
 
   describe('bulkUpdateStatus', () => {
     it('should update multiple tickets', async () => {
+      const ticket1 = new Ticket('1', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'Test 1' }, { dev: 'Felipe' }, [], new Date(), new Date());
+      const ticket2 = new Ticket('2', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'Test 2' }, { dev: 'Felipe' }, [], new Date(), new Date());
+      
       const mockResult = {
         successful: ['1', '2'],
         failed: [],
       };
 
-      vi.mocked(diContainer.ticketService.listTickets).mockResolvedValue([]);
-      vi.mocked(diContainer.ticketService.countTickets).mockResolvedValue(0);
-      vi.mocked(diContainer.ticketService.bulkUpdateStatus).mockResolvedValue(mockResult);
+      vi.mocked(diContainer.ticketService.listTickets).mockResolvedValue([ticket1, ticket2]);
+      vi.mocked(diContainer.ticketService.countTickets).mockResolvedValue(2);
+      vi.mocked(diContainer.ticketService.bulkUpdateTicketStatus).mockResolvedValue(mockResult);
 
       const { result } = renderHook(() => useTicketContext(), { wrapper });
 
@@ -230,18 +231,21 @@ describe('TicketContext', () => {
         await result.current.bulkUpdateTicketStatus(['1', '2'], TicketStatus.COMPLETED);
       });
 
-      expect(diContainer.ticketService.bulkUpdateStatus).toHaveBeenCalledWith(['1', '2'], TicketStatus.COMPLETED);
+      expect(diContainer.ticketService.bulkUpdateTicketStatus).toHaveBeenCalledWith(['1', '2'], TicketStatus.COMPLETED);
     });
 
     it('should handle partial failures in bulk update', async () => {
+      const ticket1 = new Ticket('1', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'Test 1' }, { dev: 'Felipe' }, [], new Date(), new Date());
+      const ticket2 = new Ticket('2', 't1', '1.0.0', TicketStatus.DRAFT, { title: 'Test 2' }, { dev: 'Felipe' }, [], new Date(), new Date());
+      
       const mockResult = {
         successful: ['1'],
-        failed: [{ id: '2', ticket: {} as any, error: 'Missing required fields' }],
+        failed: [{ id: '2', ticket: ticket2, error: 'Missing required fields' }],
       };
 
-      vi.mocked(diContainer.ticketService.listTickets).mockResolvedValue([]);
-      vi.mocked(diContainer.ticketService.countTickets).mockResolvedValue(0);
-      vi.mocked(diContainer.ticketService.bulkUpdateStatus).mockResolvedValue(mockResult);
+      vi.mocked(diContainer.ticketService.listTickets).mockResolvedValue([ticket1, ticket2]);
+      vi.mocked(diContainer.ticketService.countTickets).mockResolvedValue(2);
+      vi.mocked(diContainer.ticketService.bulkUpdateTicketStatus).mockResolvedValue(mockResult);
 
       const { result } = renderHook(() => useTicketContext(), { wrapper });
 

@@ -31,22 +31,19 @@ describe('TicketAPIRepository', () => {
   describe('findAll', () => {
     it('should fetch all tickets and map to domain', async () => {
       const apiResponse = {
-        data: {
-          items: [
-            {
-              id: '1',
-              template_id: 'template-1', // snake_case
-              template_version: '1.0.0',
-              status: 'draft',
-              data: { title: 'Test Ticket' },
-              metadata: { dev: 'Felipe' },
-              tags: ['backend'],
-              created_at: '2024-01-01T00:00:00Z', // ISO string
-              updated_at: '2024-01-01T00:00:00Z',
-            },
-          ],
-          total: 1,
-        },
+        data: [
+          {
+            id: '1',
+            template_id: 'template-1', // snake_case
+            template_version: '1.0.0',
+            status: 'draft',
+            data: { title: 'Test Ticket' },
+            metadata: { dev: 'Felipe' },
+            tags: ['backend'],
+            created_at: '2024-01-01T00:00:00Z', // ISO string
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+        ],
       };
 
       vi.mocked(apiClient.get).mockResolvedValue(apiResponse);
@@ -68,11 +65,23 @@ describe('TicketAPIRepository', () => {
     });
 
     it('should pass filters as query params', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: { items: [], total: 0 } });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: [] });
 
+      // Create mock TicketFilter with all methods
       const filter = {
         status: TicketStatus.COMPLETED,
         tags: ['backend', 'urgent'],
+        hasStatusFilter: () => true,
+        hasTemplateFilter: () => false,
+        hasTagsFilter: () => true,
+        hasDateFilter: () => false,
+        hasAnyFilter: () => true,
+        setStatus: vi.fn(),
+        setTemplateId: vi.fn(),
+        addTag: vi.fn(),
+        removeTag: vi.fn(),
+        setDateRange: vi.fn(),
+        clearFilters: vi.fn(),
       };
 
       await repository.findAll(filter as any);
@@ -83,6 +92,7 @@ describe('TicketAPIRepository', () => {
         expect.objectContaining({
           params: expect.objectContaining({
             status: 'completed',
+            tags: 'backend,urgent',
           }),
         })
       );
@@ -143,7 +153,9 @@ describe('TicketAPIRepository', () => {
         isAxiosError: true,
       });
 
-      await expect(repository.findById('non-existent')).rejects.toThrow();
+      // The repository returns null for 404, not throwing
+      const result = await repository.findById('non-existent');
+      expect(result).toBeNull();
     });
 
     it('should handle 500 server errors', async () => {

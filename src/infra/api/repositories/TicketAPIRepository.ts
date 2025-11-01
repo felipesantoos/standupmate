@@ -33,7 +33,7 @@ export class TicketAPIRepository implements ITicketRepository {
     if (filter?.hasTemplateFilter()) {
       params.template_id = filter.templateId;
     }
-    if (filter?.hastagsFilter()) {
+    if (filter?.hasTagsFilter()) {
       params.tags = filter.tags?.join(',');
     }
     if (filter?.hasDateFilter()) {
