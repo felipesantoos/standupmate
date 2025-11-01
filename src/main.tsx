@@ -7,12 +7,33 @@
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { App } from './app/App';
 import { Toaster } from '@app/components/ui/sonner';
 import { getDatabase } from '@infra/database/sqlite';
 import { runSeeds } from '@infra/database/seed';
 import { diContainer } from '@app/dicontainer/dicontainer';
 import './styles/global.css';
+
+/**
+ * React Query Client
+ * 
+ * Configurado para local database (staleTime curto já que não há latência de rede)
+ */
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000, // 30 segundos (local DB é rápido)
+      gcTime: 5 * 60 * 1000, // 5 minutos (cacheTime renomeado para gcTime no v5)
+      retry: 1,
+      refetchOnWindowFocus: false, // Local DB não precisa refetch ao focar
+    },
+    mutations: {
+      retry: 0, // Não retry mutations por padrão
+    },
+  },
+});
 
 /**
  * Initialize application
@@ -43,8 +64,11 @@ async function initializeApp() {
     // 4. Render React app
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
-        <App />
-        <Toaster />
+        <QueryClientProvider client={queryClient}>
+          <App />
+          <Toaster />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
       </StrictMode>
     );
   } catch (error) {

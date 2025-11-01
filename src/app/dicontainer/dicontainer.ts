@@ -17,7 +17,10 @@ import { ITemplateService } from '@core/interfaces/primary/ITemplateService';
 import { IExportService } from '@core/interfaces/primary/IExportService';
 import { SQLiteTicketRepository } from '@infra/database/repositories/SQLiteTicketRepository';
 import { SQLiteTemplateRepository } from '@infra/database/repositories/SQLiteTemplateRepository';
+import { TicketAPIRepository } from '@infra/api/repositories/TicketAPIRepository';
+import { TemplateAPIRepository } from '@infra/api/repositories/TemplateAPIRepository';
 import { Database } from '@infra/database/sqlite';
+import { env } from '@/config/env';
 
 /**
  * Dependency Injection Container Class
@@ -26,6 +29,7 @@ import { Database } from '@infra/database/sqlite';
  */
 class DIContainer {
   private db: Database | null = null;
+  private useAPI: boolean = env.useAPI; // Toggle: false = SQLite, true = HTTP API
   
   // Service instances (lazy-initialized)
   private _ticketService?: ITicketService;
@@ -40,6 +44,20 @@ class DIContainer {
    */
   setDatabase(database: Database): void {
     this.db = database;
+    // Reset services when database changes
+    this._ticketService = undefined;
+    this._templateService = undefined;
+  }
+
+  /**
+   * Set whether to use HTTP API or SQLite
+   * 
+   * @param use - true for HTTP API, false for SQLite
+   */
+  setUseAPI(use: boolean): void {
+    this.useAPI = use;
+    // Reset services to recreate with new repository type
+    this.reset();
   }
 
   /**
@@ -61,11 +79,15 @@ class DIContainer {
    * 
    * Lazy-initialized on first access.
    * Dependencies: TicketRepository, TemplateService
+   * 
+   * Uses SQLite or HTTP API based on useAPI flag
    */
   get ticketService(): ITicketService {
     if (!this._ticketService) {
-      const db = this.getDb();
-      const ticketRepository = new SQLiteTicketRepository(db);
+      // Choose repository based on useAPI flag
+      const ticketRepository = this.useAPI
+        ? new TicketAPIRepository()           // HTTP API (future backend)
+        : new SQLiteTicketRepository(this.getDb()); // SQLite local (current)
       
       // TicketService depends on TemplateService for validation
       const templateService = this.templateService;
@@ -80,12 +102,19 @@ class DIContainer {
    * 
    * Lazy-initialized on first access.
    * Dependencies: TemplateRepository, TicketRepository
+   * 
+   * Uses SQLite or HTTP API based on useAPI flag
    */
   get templateService(): ITemplateService {
     if (!this._templateService) {
-      const db = this.getDb();
-      const templateRepository = new SQLiteTemplateRepository(db);
-      const ticketRepository = new SQLiteTicketRepository(db);
+      // Choose repository based on useAPI flag
+      const templateRepository = this.useAPI
+        ? new TemplateAPIRepository()             // HTTP API (future backend)
+        : new SQLiteTemplateRepository(this.getDb()); // SQLite local (current)
+      
+      const ticketRepository = this.useAPI
+        ? new TicketAPIRepository()
+        : new SQLiteTicketRepository(this.getDb());
       
       this._templateService = new TemplateService(templateRepository, ticketRepository);
     }
