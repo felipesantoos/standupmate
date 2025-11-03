@@ -158,23 +158,26 @@ export function TicketEditPage() {
     if (!ticket) return;
 
     const oldValue = ticket.data[fieldId];
-    const newData = { ...ticket.data, [fieldId]: value };
 
-    // Update ticket
-    const updatedTicket = new Ticket(
-      ticket.id,
-      ticket.templateId,
-      ticket.templateVersion,
-      ticket.status,
-      newData,
-      ticket.metadata,
-      ticket.tags,
-      ticket.createdAt,
-      new Date(),
-      ticket.completedAt
-    );
-
-    setTicket(updatedTicket);
+    // Use functional form to avoid stale state issues
+    setTicket(prevTicket => {
+      if (!prevTicket) return prevTicket;
+      
+      const newData = { ...prevTicket.data, [fieldId]: value };
+      
+      return new Ticket(
+        prevTicket.id,
+        prevTicket.templateId,
+        prevTicket.templateVersion,
+        prevTicket.status,
+        newData,
+        prevTicket.metadata,
+        prevTicket.tags,
+        prevTicket.createdAt,
+        new Date(),
+        prevTicket.completedAt
+      );
+    });
 
     // Track change in history (only if value actually changed)
     if (!isNew && oldValue !== value) {
@@ -198,20 +201,23 @@ export function TicketEditPage() {
   const updateTags = (newTags: string[]) => {
     if (!ticket) return;
 
-    const updatedTicket = new Ticket(
-      ticket.id,
-      ticket.templateId,
-      ticket.templateVersion,
-      ticket.status,
-      ticket.data,
-      ticket.metadata,
-      newTags,
-      ticket.createdAt,
-      new Date(),
-      ticket.completedAt
-    );
-
-    setTicket(updatedTicket);
+    // Use functional form to avoid stale state issues
+    setTicket(prevTicket => {
+      if (!prevTicket) return prevTicket;
+      
+      return new Ticket(
+        prevTicket.id,
+        prevTicket.templateId,
+        prevTicket.templateVersion,
+        prevTicket.status,
+        prevTicket.data,
+        prevTicket.metadata,
+        newTags,
+        prevTicket.createdAt,
+        new Date(),
+        prevTicket.completedAt
+      );
+    });
   };
 
   // Update status
@@ -229,22 +235,28 @@ export function TicketEditPage() {
       }
     }
 
-    const updatedTicket = new Ticket(
-      ticket.id,
-      ticket.templateId,
-      ticket.templateVersion,
-      status,
-      ticket.data,
-      ticket.metadata,
-      ticket.tags,
-      ticket.createdAt,
-      new Date(),
-      status === TicketStatus.COMPLETED ? new Date() : ticket.completedAt
-    );
+    // Use functional form to avoid stale state issues
+    let updatedTicket: Ticket | null = null;
+    setTicket(prevTicket => {
+      if (!prevTicket) return prevTicket;
+      
+      updatedTicket = new Ticket(
+        prevTicket.id,
+        prevTicket.templateId,
+        prevTicket.templateVersion,
+        status,
+        prevTicket.data,
+        prevTicket.metadata,
+        prevTicket.tags,
+        prevTicket.createdAt,
+        new Date(),
+        status === TicketStatus.COMPLETED ? new Date() : prevTicket.completedAt
+      );
+      
+      return updatedTicket;
+    });
 
-    setTicket(updatedTicket);
-
-    if (!isNew) {
+    if (!isNew && updatedTicket) {
       await updateTicket(ticket.id, updatedTicket);
 
       // Add to history
